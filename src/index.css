@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  --color-primary-50: #effaef;
+  --color-primary-100: #d6f2d6;
+  --color-primary-200: #ade3ad;
+  --color-primary-300: #7fd17f;
+  --color-primary-400: #52b752;
+  --color-primary-500: #379a37;
+  --color-primary-600: #2a7d2c;
+  --color-primary-700: #236425;
+  --color-primary-800: #1d4f1f;
+  --color-primary-900: #173d19;
+  --color-primary-950: #0c230e;
+
+  --color-bg: #0b110b;
+  --color-surface: #121b12;
+  --color-surface-2: #182418;
+  --color-surface-3: #213121;
+  --color-line: #2c412c;
+  --color-fg: #e7eee7;
+  --color-muted: #9aaa9a;
+  --color-danger: #ef6b62;
+  --color-gold: #e3b341;
+
+  --radius-card: 0.375rem;
+  --radius-control: 0.375rem;
+  --radius-pill: 9999px;
+
+  --shadow-float: 0 16px 48px 0 #000000;
+
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+
+  --text-display: 2rem;
+  --text-display--line-height: 2.5rem;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 800;
+
+  --text-stat: 1.5rem;
+  --text-stat--line-height: 2rem;
+  --text-stat--letter-spacing: -0.01em;
+  --text-stat--font-weight: 800;
+
+  --text-headline: 1.5rem;
+  --text-headline--line-height: 2rem;
+  --text-headline--letter-spacing: -0.01em;
+  --text-headline--font-weight: 600;
+
+  --text-title: 1rem;
+  --text-title--line-height: 1.5rem;
+  --text-title--font-weight: 500;
+
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.25rem;
+  --text-body--font-weight: 400;
+
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.08em;
+  --text-label--font-weight: 500;
+
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+  --text-caption--font-weight: 400;
+
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes shimmer {
+    0%,
+    100% {
+      background-color: var(--color-surface-2);
+    }
+    50% {
+      background-color: var(--color-surface-3);
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-primary-700 text-fg;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-300;
+  }
+}
