@@ -68,10 +68,25 @@ export type PlayerResponse = {
   matches: Match[];
 };
 
-export type MatchesResponse = {
-  month: string | null;
-  months: { month: string; count: number }[];
-  matches: Match[];
+export type MoonLeader = {
+  steam_id: string;
+  name: string | null;
+  avatar: string | null;
+  /** Highest ship value in a single match on this moon. */
+  best: number;
+  best_at: number;
+  /** Sum of ship values over every match on this moon. */
+  total: number;
+  games: number;
+};
+
+export type MoonBoard = { moon: string; matches: number; leaders: MoonLeader[] };
+
+export type MoonsResponse = { moons: MoonBoard[] };
+
+export type StatsResponse = {
+  online: number;
+  ranked: { searching: number; playing: number };
 };
 
 export class ApiError extends Error {
@@ -94,5 +109,6 @@ async function get<T>(path: string): Promise<T> {
 export const api = {
   leaderboard: () => get<LeaderboardResponse>("/api/leaderboard?limit=1000"),
   player: (steamId: string) => get<PlayerResponse>(`/api/player/${encodeURIComponent(steamId)}`),
-  matches: (month?: string) => get<MatchesResponse>(`/api/matches${month ? `?month=${encodeURIComponent(month)}` : ""}`),
+  moons: () => get<MoonsResponse>("/api/moons"),
+  stats: () => get<StatsResponse>("/api/stats"),
 };

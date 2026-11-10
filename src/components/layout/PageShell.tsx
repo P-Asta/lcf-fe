@@ -2,12 +2,13 @@ import type { ReactNode } from "react";
 import { NavLink } from "react-router";
 import stardust from "../../../assets/stardust.png";
 import { Container } from "@/components/layout/Container";
+import { RankedStatus } from "@/components/RankedStatus";
 import { LAYER } from "@/lib/layers";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/", label: "Leaderboard", end: true },
-  { to: "/matches", label: "Matches", end: false },
+  { to: "/moons", label: "Moons", end: false },
   { to: "/players", label: "Players", end: false },
 ];
 
@@ -38,6 +39,7 @@ export function PageShell({ children }: { children: ReactNode }) {
               </NavLink>
             ))}
           </nav>
+          <RankedStatus className="ml-auto hidden sm:flex" />
         </Container>
       </header>
       <main className="relative pt-16 pb-24">
