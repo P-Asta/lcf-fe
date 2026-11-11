@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminApi, type EventConfig, type ServerResponse } from "@/lib/api";
+import { OddsEditor } from "@/pages/admin/OddsEditor";
 import { eventKindLabel } from "@/lib/format";
 
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -19,7 +20,6 @@ const selectCls =
 const DETAILS: Record<string, [string, string][]> = {
   weather: [
     ["", "Random"],
-    ["mild", "Mild"],
     ["rainy", "Rainy"],
     ["stormy", "Stormy"],
     ["flooded", "Flooded"],
@@ -203,6 +203,7 @@ export function ServerPanel({ pw }: { pw: string }) {
     <Stack gap={8}>
       <Shutdown pw={pw} data={q.data} />
       <Events pw={pw} data={q.data} />
+      <OddsEditor pw={pw} data={q.data} />
     </Stack>
   );
 }

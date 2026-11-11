@@ -211,12 +211,21 @@ export type FamilyEntry = {
 
 export type FamilyResponse = { allow_all: boolean; entries: FamilyEntry[] };
 
+/** Random-roll odds: `no_event` is a share (0..1), the rest are relative weights. */
+export type Odds = {
+  no_event: number;
+  events: Record<string, number>;
+  weather: Record<string, number>;
+  infestation: Record<string, number>;
+};
+
 export type EventConfig = {
   /** Never rolled in ranked / random rolls; rooms can still pick them by hand. */
   hidden: string[];
   /** "roll_all" | "roll" | "none" | an event kind. */
   quick_event: string;
   quick_detail: string | null;
+  odds: Odds;
 };
 
 export type ServerResponse = {
