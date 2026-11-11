@@ -1,14 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { RotateCcw, Save } from "lucide-react";
+import { EyeOff, RotateCcw, Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Table, TBody, TD, TH, THead, TR } from "@/components/DataTable";
 import { Stack } from "@/components/layout/Stack";
 import { Panel, Section } from "@/components/layout/Section";
-import { Caption, Text } from "@/components/typography/Text";
+import { Caption, Label, Text } from "@/components/typography/Text";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminApi, type Odds, type ServerResponse } from "@/lib/api";
 import { eventKindLabel } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const pct = (n: number) => `${(n * 100).toFixed(n > 0 && n < 0.01 ? 2 : 1)}%`;
@@ -23,69 +24,79 @@ const DEFAULTS: Odds = {
   infestation: { hoarding_bug: 1, nutcracker: 1 },
 };
 
-function WeightInput({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+const clampWeight = (v: string) => Math.max(0, Math.min(10000, Math.round(Number(v) || 0)));
+
+function NumberField({ label, value, onChange, suffix }: { label: string; value: number; onChange: (v: string) => void; suffix?: string }) {
   return (
-    <Input
-      type="number"
-      min={0}
-      max={10000}
-      aria-label={label}
-      value={value}
-      onChange={(e) => onChange(Math.max(0, Math.min(10000, Math.round(Number(e.target.value) || 0))))}
-      className="h-8 w-24 text-right tabular-nums"
-    />
+    <div className="relative w-24 shrink-0">
+      <Input
+        type="number"
+        min={0}
+        aria-label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={cn("h-8 bg-surface-2 text-right tabular-nums hover:bg-surface-3", suffix ? "pr-8 pl-3" : "px-3")}
+      />
+      {suffix && <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-caption text-muted">{suffix}</span>}
+    </div>
   );
 }
 
-/** One weight table: rows with a weight input and the resulting share. */
-function WeightTable({
+/** Weight input, a bar for the resulting chance, and the chance itself. */
+function OddsRow({ label, weight, share, max, off, onChange }: { label: string; weight: number; share: number; max: number; off?: boolean; onChange: (v: number) => void }) {
+  return (
+    <div className="grid h-11 grid-cols-[minmax(0,9rem)_auto_minmax(0,1fr)_3.5rem] items-center gap-3">
+      <span className={cn("flex min-w-0 items-center gap-1 truncate text-body", off ? "text-muted" : "text-fg")}>
+        {off && <EyeOff aria-label="Hidden from random rolls" className="size-3.5 shrink-0" />}
+        <span className="truncate">{label}</span>
+      </span>
+      <NumberField label={`${label} weight`} value={weight} onChange={(v) => onChange(clampWeight(v))} />
+      <span className="h-2 overflow-hidden rounded-pill bg-surface-3" aria-hidden>
+        <span className="block h-full rounded-pill bg-primary-500 transition-[width] duration-200" style={{ width: `${max > 0 ? (share / max) * 100 : 0}%` }} />
+      </span>
+      <span className={cn("text-right text-body tabular-nums", off ? "text-muted" : "text-primary-300")}>{off ? "-" : pct(share)}</span>
+    </div>
+  );
+}
+
+function Group({
   title,
+  share,
   weights,
   labels,
-  scale,
-  muted,
+  hidden,
+  columns,
+  order,
   onChange,
 }: {
   title: string;
+  /** Chance of all rolls that this group splits. */
+  share: number;
   weights: Record<string, number>;
   labels: (k: string) => string;
-  /** Share of all rolls this table splits (e.g. 70% for events). */
-  scale: number;
-  muted?: (k: string) => boolean;
+  hidden?: (k: string) => boolean;
+  columns?: boolean;
+  /** Display order (the game's); keys missing from it go last. */
+  order?: string[];
   onChange: (k: string, v: number) => void;
 }) {
-  const keys = Object.keys(weights);
-  const total = keys.filter((k) => !muted?.(k)).reduce((n, k) => n + weights[k], 0);
+  const rank = (k: string) => (order && order.includes(k) ? order.indexOf(k) : 999);
+  const keys = Object.keys(weights).sort((a, b) => rank(a) - rank(b));
+  const total = keys.filter((k) => !hidden?.(k)).reduce((n, k) => n + weights[k], 0);
+  const shareOf = (k: string) => (!hidden?.(k) && total > 0 ? (weights[k] / total) * share : 0);
+  const max = Math.max(...keys.map(shareOf), 0);
   return (
-    <Table>
-      <THead>
-        <tr>
-          <TH>{title}</TH>
-          <TH align="right">Weight</TH>
-          <TH align="right">Chance</TH>
-        </tr>
-      </THead>
-      <TBody>
-        {keys.map((k) => {
-          const off = muted?.(k) ?? false;
-          const share = !off && total > 0 ? (weights[k] / total) * scale : 0;
-          return (
-            <TR key={k}>
-              <TD className={off ? "text-muted" : "text-fg"}>
-                {labels(k)}
-                {off && <Caption className="ml-2">hidden from random</Caption>}
-              </TD>
-              <TD align="right">
-                <WeightInput label={`${labels(k)} weight`} value={weights[k]} onChange={(v) => onChange(k, v)} />
-              </TD>
-              <TD align="right" className="text-primary-300 tabular-nums">
-                {pct(share)}
-              </TD>
-            </TR>
-          );
-        })}
-      </TBody>
-    </Table>
+    <div className="flex flex-col gap-2">
+      <Stack direction="row" align="baseline" justify="between" gap={3}>
+        <Label>{title}</Label>
+        <Caption className="tabular-nums">{pct(share)} of rolls</Caption>
+      </Stack>
+      <div className={cn("grid gap-x-8", columns && "lg:grid-cols-2")}>
+        {keys.map((k) => (
+          <OddsRow key={k} label={labels(k)} weight={weights[k]} share={shareOf(k)} max={max} off={hidden?.(k)} onChange={(v) => onChange(k, v)} />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -102,59 +113,64 @@ export function OddsEditor({ pw, data }: { pw: string; data: ServerResponse }) {
 
   const hidden = (k: string) => data.events.hidden.includes(k);
   const eventsShare = 1 - odds.no_event;
-  const weatherShare = (() => {
-    const total = Object.entries(odds.events).filter(([k]) => !hidden(k)).reduce((n, [, w]) => n + w, 0);
-    return total > 0 && !hidden("weather") ? (odds.events.weather / total) * eventsShare : 0;
-  })();
-  const infestShare = (() => {
-    const total = Object.entries(odds.events).filter(([k]) => !hidden(k)).reduce((n, [, w]) => n + w, 0);
-    return total > 0 && !hidden("infestation") ? (odds.events.infestation / total) * eventsShare : 0;
-  })();
+  const visibleTotal = Object.entries(odds.events).filter(([k]) => !hidden(k)).reduce((n, [, w]) => n + w, 0);
+  const shareOf = (k: string) => (!hidden(k) && visibleTotal > 0 ? (odds.events[k] / visibleTotal) * eventsShare : 0);
 
   return (
     <Section title="Event odds">
-      <Panel className="flex flex-col gap-4 p-4">
+      <Panel className="flex flex-col gap-6 p-5">
         <Caption className="text-body">
-          Used by every random event roll (ranked, quick play, rooms set to Roll). Weights are relative. Hidden events drop out of ranked and random rolls and
-          the others share their chance. Chances below are for ranked; quick play with "every event" also includes hidden ones.
+          Every random event roll (ranked, quick play, rooms set to Roll). Weights are relative; hidden events drop out and the others share their chance.
         </Caption>
 
-        <Stack direction="row" align="center" gap={3} wrap>
-          <Text variant="title">No event</Text>
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            step={1}
-            aria-label="No event chance in percent"
-            value={Math.round(odds.no_event * 1000) / 10}
-            onChange={(e) => setOdds({ ...odds, no_event: Math.max(0, Math.min(100, Number(e.target.value) || 0)) / 100 })}
-            className="h-8 w-24 text-right tabular-nums"
-          />
-          <Caption>% of all rolls</Caption>
+        <Stack gap={2}>
+          <Stack direction="row" align="center" justify="between" gap={4} wrap>
+            <Stack direction="row" align="center" gap={3}>
+              <Text variant="title">No event</Text>
+              <NumberField
+                label="No event chance in percent"
+                value={Math.round(odds.no_event * 1000) / 10}
+                suffix="%"
+                onChange={(v) => setOdds({ ...odds, no_event: Math.max(0, Math.min(100, Number(v) || 0)) / 100 })}
+              />
+            </Stack>
+            <Stack direction="row" align="center" gap={2}>
+              <Badge>No event {pct(odds.no_event)}</Badge>
+              <Badge tone="accent">Events {pct(eventsShare)}</Badge>
+            </Stack>
+          </Stack>
+          <div className="flex h-3 overflow-hidden rounded-pill bg-surface-3" aria-hidden>
+            <span className="h-full bg-surface-3" style={{ width: `${odds.no_event * 100}%` }} />
+            <span className="h-full bg-primary-500" style={{ width: `${eventsShare * 100}%` }} />
+          </div>
         </Stack>
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          <WeightTable
-            title={`Events (${pct(eventsShare)} of rolls)`}
-            weights={odds.events}
-            labels={eventKindLabel}
-            scale={eventsShare}
-            muted={hidden}
-            onChange={(k, v) => setOdds({ ...odds, events: { ...odds.events, [k]: v } })}
-          />
-          <WeightTable
-            title={`Weather (${pct(weatherShare)})`}
+        <Group
+          title="Events"
+          share={eventsShare}
+          weights={odds.events}
+          labels={eventKindLabel}
+          hidden={hidden}
+          columns
+          order={data.event_kinds}
+          onChange={(k, v) => setOdds({ ...odds, events: { ...odds.events, [k]: v } })}
+        />
+
+        <div className="grid gap-x-8 gap-y-6 lg:grid-cols-2">
+          <Group
+            title="Weather"
+            share={shareOf("weather")}
             weights={odds.weather}
             labels={(k) => WEATHER_LABELS[k] ?? k}
-            scale={weatherShare}
+            order={Object.keys(WEATHER_LABELS)}
             onChange={(k, v) => setOdds({ ...odds, weather: { ...odds.weather, [k]: v } })}
           />
-          <WeightTable
-            title={`Infestation (${pct(infestShare)})`}
+          <Group
+            title="Infestation"
+            share={shareOf("infestation")}
             weights={odds.infestation}
             labels={(k) => INFEST_LABELS[k] ?? k}
-            scale={infestShare}
+            order={Object.keys(INFEST_LABELS)}
             onChange={(k, v) => setOdds({ ...odds, infestation: { ...odds.infestation, [k]: v } })}
           />
         </div>
@@ -164,7 +180,7 @@ export function OddsEditor({ pw, data }: { pw: string; data: ServerResponse }) {
             {errText(save.error)}
           </Text>
         )}
-        <Stack direction="row" gap={2}>
+        <Stack direction="row" align="center" gap={2}>
           <Button variant="primary" disabled={!dirty || save.isPending} onClick={() => save.mutate()}>
             <Save aria-hidden />
             {save.isPending ? "Saving…" : "Save odds"}
@@ -173,6 +189,7 @@ export function OddsEditor({ pw, data }: { pw: string; data: ServerResponse }) {
             <RotateCcw aria-hidden />
             Defaults
           </Button>
+          {dirty && <Caption>Unsaved changes</Caption>}
         </Stack>
       </Panel>
     </Section>
