@@ -9,8 +9,13 @@ export const useLeaderboard = () =>
 export const usePlayers = () =>
   useQuery({ queryKey: ["players"], queryFn: api.players, refetchInterval: (q) => errorRetry(q) || 60_000 });
 
-export const useDaily = () =>
-  useQuery({ queryKey: ["daily"], queryFn: api.daily, refetchInterval: (q) => errorRetry(q) || 60_000 });
+export const useDaily = (day?: string) =>
+  useQuery({
+    queryKey: ["daily", day ?? "today"],
+    queryFn: () => api.daily(day),
+    refetchInterval: (q) => errorRetry(q) || (day ? false : 60_000),
+    placeholderData: (prev) => prev,
+  });
 
 export const useRanks = () =>
   useQuery({ queryKey: ["ranks"], queryFn: api.ranks, staleTime: 300_000, refetchInterval: (q) => errorRetry(q) || 600_000 });

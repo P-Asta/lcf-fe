@@ -79,6 +79,11 @@ export type DailyResponse = {
   locked: boolean;
   first: DailyRow[];
   best: DailyRow[];
+  /** The current challenge's day, and whether this one is it (still running). */
+  today: string;
+  live: boolean;
+  /** Every stored challenge, newest first. */
+  days: { day: string; players: number }[];
 };
 
 export type DailyAdminResponse = DailyResponse & { moons: string[]; tools: string[]; event_kinds: string[] };
@@ -304,7 +309,7 @@ export const api = {
   players: () => get<PlayerListResponse>("/api/players"),
   badges: () => get<{ badges: BadgeDef[] }>("/api/badges"),
   ranks: () => get<{ ranks: RankIcon[] }>("/api/ranks"),
-  daily: () => get<DailyResponse>("/api/daily"),
+  daily: (day?: string) => get<DailyResponse>(day ? `/api/daily?day=${encodeURIComponent(day)}` : "/api/daily"),
   player: (steamId: string) => get<PlayerResponse>(`/api/player/${encodeURIComponent(steamId)}`),
   moons: () => get<MoonsResponse>("/api/moons"),
   stats: () => get<StatsResponse>("/api/stats"),

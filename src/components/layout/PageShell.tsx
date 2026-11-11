@@ -7,8 +7,8 @@ import { LAYER } from "@/lib/layers";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/", label: "Leaderboard", end: true },
-  { to: "/daily", label: "Daily", end: false },
+  { to: "/", label: "League", end: true },
+  { to: "/daily", label: "Daily race", end: false },
   { to: "/moons", label: "Moons", end: false },
   { to: "/players", label: "Players", end: false },
 ];
