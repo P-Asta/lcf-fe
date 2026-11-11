@@ -12,7 +12,8 @@ export type LeaderboardEntry = {
   rank: string;
   games: number;
   wins: number;
-  badge: number | null;
+  /** Badges worn next to the name (two slots). */
+  worn: (number | null)[];
 };
 
 export type LeaderboardResponse = {
@@ -31,7 +32,8 @@ export type Profile = {
   games: number;
   wins: number;
   position: number | null;
-  badge: number | null;
+  /** Badges worn next to the name (two slots). */
+  worn: (number | null)[];
 };
 
 export type RankIcon = {
@@ -117,7 +119,8 @@ export type PlayerListEntry = {
   /** Ids of the badges this player holds. */
   badges: number[];
   /** The badge the player wears next to their name. */
-  badge: number | null;
+  /** Badges worn next to the name (two slots). */
+  worn: (number | null)[];
 };
 
 export type PlayerListResponse = { total: number; ranked_total: number; entries: PlayerListEntry[] };

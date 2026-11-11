@@ -69,3 +69,15 @@ export function WornBadge({ id, size = "sm" }: { id: number | null | undefined }
   if (!badge) return null;
   return <BadgeIcon badge={badge} size={size} />;
 }
+
+export function WornBadges({ ids, size = "sm" }: { ids: (number | null)[] | null | undefined } & VariantProps<typeof iconVariants>) {
+  const worn = (ids ?? []).filter((id): id is number => id != null);
+  if (worn.length === 0) return null;
+  return (
+    <span className="flex shrink-0 items-center gap-1">
+      {worn.map((id) => (
+        <WornBadge key={id} id={id} size={size} />
+      ))}
+    </span>
+  );
+}
