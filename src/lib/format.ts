@@ -54,7 +54,7 @@ export const eventLabel = (e: GameEvent) => {
   return `${base}: ${d}`;
 };
 
-export const kindLabel = (k: MatchKind) => (k === "ranked" ? "Ranked" : k === "public" ? "Public" : "Private");
+export const kindLabel = (k: MatchKind) => (k === "ranked" ? "Ranked" : k === "quick" ? "Quick play" : k === "public" ? "Public" : "Private");
 
 export const reasonLabel = (reason: string) => {
   switch (reason) {

@@ -57,7 +57,7 @@ export type MatchSide = {
   tr_after: number | null;
 };
 
-export type MatchKind = "ranked" | "public" | "private";
+export type MatchKind = "ranked" | "quick" | "public" | "private";
 
 export type Match = {
   id: string;
@@ -180,6 +180,22 @@ export type FamilyEntry = {
 
 export type FamilyResponse = { allow_all: boolean; entries: FamilyEntry[] };
 
+export type EventConfig = {
+  /** Never rolled in ranked / random rolls; rooms can still pick them by hand. */
+  hidden: string[];
+  /** "roll_all" | "roll" | "none" | an event kind. */
+  quick_event: string;
+  quick_detail: string | null;
+};
+
+export type ServerResponse = {
+  events: EventConfig;
+  event_kinds: string[];
+  /** Seconds until the scheduled shutdown. */
+  shutdown_in: number | null;
+  stats: { online: number; rooms: number; matches: number; ranked: { searching: number; playing: number }; quick: { searching: number } };
+};
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -217,6 +233,10 @@ export const adminApi = {
   /** `days` 0 = permanent. */
   ban: (pw: string, steamId: string, days: number, reason: string) => adminFetch<{ ok: true }>(pw, "/api/admin/ban", { steam_id: steamId, days, reason }),
   unban: (pw: string, steamId: string) => adminFetch<{ ok: true }>(pw, "/api/admin/unban", { steam_id: steamId }),
+  server: (pw: string) => adminFetch<ServerResponse>(pw, "/api/admin/server"),
+  setEvents: (pw: string, c: EventConfig) => adminFetch<ServerResponse>(pw, "/api/admin/events", c),
+  /** `minutes` until the shutdown; `cancel` calls a scheduled one off. */
+  shutdown: (pw: string, body: { minutes?: number; cancel?: boolean }) => adminFetch<ServerResponse>(pw, "/api/admin/shutdown", body),
   family: (pw: string) => adminFetch<FamilyResponse>(pw, "/api/admin/family"),
   setFamilyVerified: (pw: string, steamId: string, verified: boolean) =>
     adminFetch<{ ok: true }>(pw, "/api/admin/family/verify", { steam_id: steamId, verified }),

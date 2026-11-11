@@ -21,6 +21,7 @@ import { fmtDate, fmtTime, fmtTr } from "@/lib/format";
 import { BadgeManager, PlayerBadgeEditor } from "@/pages/admin/BadgeManager";
 import { FamilyShare } from "@/pages/admin/FamilyShare";
 import { RankIcons } from "@/pages/admin/RankIcons";
+import { ServerPanel } from "@/pages/admin/ServerPanel";
 
 const KEY = "lcf-admin-pw";
 const PAGE = 50;
@@ -114,7 +115,7 @@ function Login({ onLogin }: { onLogin: (pw: string) => void }) {
 type Filter = "all" | "online" | "banned" | "ranked";
 
 function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
-  const [tab, setTab] = useState<"players" | "badges" | "ranks" | "family" | "audit">("players");
+  const [tab, setTab] = useState<"players" | "badges" | "ranks" | "family" | "server" | "audit">("players");
   const players = useQuery({ queryKey: ["admin", "players", pw], queryFn: () => adminApi.players(pw), refetchInterval: 30_000, retry: false });
 
   const authFailed = isAuthError(players.error);
@@ -153,6 +154,7 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
           { value: "badges", label: "Badges" },
           { value: "ranks", label: "Ranks" },
           { value: "family", label: "Family share" },
+          { value: "server", label: "Server" },
           { value: "audit", label: "Audit log" },
         ]}
       />
@@ -169,6 +171,8 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
         <BadgeManager pw={pw} players={list} />
       ) : tab === "ranks" ? (
         <RankIcons pw={pw} />
+      ) : tab === "server" ? (
+        <ServerPanel pw={pw} />
       ) : tab === "family" ? (
         <FamilyShare pw={pw} />
       ) : (
