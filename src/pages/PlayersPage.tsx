@@ -9,13 +9,13 @@ import { EmptyState, ErrorState } from "@/components/StateBlock";
 import { Caption, Text } from "@/components/typography/Text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Stack } from "@/components/layout/Stack";
-import { useLeaderboard } from "@/hooks/queries";
+import { usePlayers } from "@/hooks/queries";
 import { fmtPct, fmtTr } from "@/lib/format";
 
 const PAGE = 18;
 
 export function PlayersPage() {
-  const { data, error, isPending } = useLeaderboard();
+  const { data, error, isPending } = usePlayers();
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
@@ -35,7 +35,7 @@ export function PlayersPage() {
           <Text variant="headline" as="h1">
             Players
           </Text>
-          <Caption className="text-body">Ranked players. Others show up after their placement games.</Caption>
+          <Caption className="text-body">Everyone who has played LCF.</Caption>
         </Stack>
         <SearchField
           value={query}
@@ -56,7 +56,7 @@ export function PlayersPage() {
           ))}
         </div>
       ) : list.length === 0 ? (
-        <EmptyState icon={Users} title={query ? "No player matches that name" : "No ranked players yet"} />
+        <EmptyState icon={Users} title={query ? "No player matches that name" : "No players yet"} />
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {slice.map((e) => (
@@ -71,7 +71,7 @@ export function PlayersPage() {
                     <RankBadge rank={e.rank} />
                   </span>
                   <Caption>
-                    #{e.position} · {fmtTr(e.tr)} TR · {fmtPct(e.wins, e.games)} win rate
+                    {e.position != null ? `#${e.position} · ${fmtTr(e.tr)} TR · ${fmtPct(e.wins, e.games)} win rate` : "No ranked games yet"}
                   </Caption>
                 </div>
               </Link>

@@ -75,7 +75,7 @@ export function LeaderboardPage() {
         <LeaderboardSkeleton />
       ) : rows.length === 0 ? (
         <EmptyState icon={Trophy} title={query ? "No player matches that name" : "No ranked players yet"}>
-          {query ? "Try a shorter part of the name." : "Players appear here after 10 placement games with a stable rating."}
+          {query ? "Try a shorter part of the name." : "Players appear here after their first rated match."}
         </EmptyState>
       ) : (
         <Table>

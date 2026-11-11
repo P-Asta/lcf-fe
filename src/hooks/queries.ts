@@ -6,7 +6,10 @@ const errorRetry = (q: { state: { status: string } }) => (q.state.status === "er
 export const useLeaderboard = () =>
   useQuery({ queryKey: ["leaderboard"], queryFn: api.leaderboard, refetchInterval: (q) => errorRetry(q) || 60_000 });
 
-export const usePlayer = (steamId: string) =>
+export const usePlayers = () =>
+  useQuery({ queryKey: ["players"], queryFn: api.players, refetchInterval: (q) => errorRetry(q) || 60_000 });
+
+export const usePlayer =(steamId: string) =>
   useQuery({ queryKey: ["player", steamId], queryFn: () => api.player(steamId), refetchInterval: errorRetry, enabled: !!steamId });
 
 export const useMoons = () =>

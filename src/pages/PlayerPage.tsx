@@ -61,7 +61,7 @@ function PlayerHeader({ data }: { data: PlayerResponse }) {
           <div className="flex flex-wrap items-center gap-2">
             <Headline className="truncate">{p.name}</Headline>
             <RankBadge rank={p.rank} />
-            {!p.provisional && <Badge>{fmtTr(p.tr)} TR</Badge>}
+            <Badge>{fmtTr(p.tr)} TR</Badge>
           </div>
           <Caption className="text-body">Joined {fmtDate(data.joined)}</Caption>
           <a
@@ -91,7 +91,7 @@ function PlayerHeader({ data }: { data: PlayerResponse }) {
 
 function RatingCards({ data, stats }: { data: PlayerResponse; stats: PlayerStats }) {
   const p = data.profile;
-  const peak = Math.max(data.peak_tr ?? 0, p.provisional ? 0 : p.tr);
+  const peak = Math.max(data.peak_tr ?? 0, p.tr);
   return (
     <Section title="Rating">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
@@ -100,13 +100,13 @@ function RatingCards({ data, stats }: { data: PlayerResponse; stats: PlayerStats
           big
           className="col-span-2"
           label="Current TR"
-          value={p.provisional ? "?" : fmtTr(p.tr)}
-          sub={p.provisional ? `Placement ${p.games}/10` : `Glicko ${fmtTr(p.glicko)} ±${fmtTr(p.rd)}`}
+          value={fmtTr(p.tr)}
+          sub={`Glicko ${fmtTr(p.glicko)} ±${fmtTr(p.rd)}`}
         />
-        <StatCard label="Peak TR" value={peak > 0 ? fmtTr(peak) : "-"} sub={peak > 0 && !p.provisional ? `${fmtTr(Math.max(0, peak - p.tr))} below peak` : "No rated games"} />
+        <StatCard label="Peak TR" value={peak > 0 ? fmtTr(peak) : "-"} sub={p.games > 0 ? `${fmtTr(Math.max(0, peak - p.tr))} below peak` : "No rated games"} />
         <StatCard label="Matches" value={stats.games} sub={`${stats.wins} wins`} />
         <StatCard label="Win rate" value={fmtPct(stats.wins, stats.games)} sub={`${stats.losses} losses`} />
-        <StatCard label="Ladder rank" value={p.position != null ? `#${p.position}` : "-"} sub={p.position != null ? `of ${data.ranked_total} players` : "Not ranked yet"} />
+        <StatCard label="Ladder rank" value={p.position != null ? `#${p.position}` : "-"} sub={p.position != null ? `of ${data.ranked_total} players` : "No rated games"} />
       </div>
     </Section>
   );

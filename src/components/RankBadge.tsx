@@ -1,8 +1,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { RANK_COLORS, hasRank, rankLabel } from "@/lib/ranks";
+import { RANK_COLORS, hasRank, rankLabel, rankName } from "@/lib/ranks";
 import { cn } from "@/lib/utils";
 
-const rankBadgeVariants = cva("inline-flex shrink-0 items-center justify-center rounded-control font-extrabold", {
+const rankBadgeVariants = cva("inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-control font-extrabold", {
   variants: {
     size: {
       sm: "h-6 min-w-8 px-1 text-caption",
@@ -22,7 +22,7 @@ export function RankBadge({ rank, size, className }: { rank?: string | null; cla
   if (!hasRank(rank)) return null;
   const bg = RANK_COLORS[rank!] ?? "#828282";
   return (
-    <span className={cn(rankBadgeVariants({ size }), className)} style={{ backgroundColor: bg, color: inkFor(bg) }} title={`Rank ${rankLabel(rank)}`}>
+    <span className={cn(rankBadgeVariants({ size }), className)} style={{ backgroundColor: bg, color: inkFor(bg) }} title={rankName(rank)}>
       {rankLabel(rank)}
     </span>
   );
