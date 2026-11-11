@@ -9,7 +9,10 @@ export const useLeaderboard = () =>
 export const usePlayers = () =>
   useQuery({ queryKey: ["players"], queryFn: api.players, refetchInterval: (q) => errorRetry(q) || 60_000 });
 
-export const usePlayer =(steamId: string) =>
+export const useBadges = () =>
+  useQuery({ queryKey: ["badges"], queryFn: api.badges, refetchInterval: (q) => errorRetry(q) || 300_000 });
+
+export const usePlayer = (steamId: string) =>
   useQuery({ queryKey: ["player", steamId], queryFn: () => api.player(steamId), refetchInterval: errorRetry, enabled: !!steamId });
 
 export const useMoons = () =>

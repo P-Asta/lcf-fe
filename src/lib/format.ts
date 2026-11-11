@@ -81,4 +81,28 @@ export const reasonLabel = (reason: string) => {
   }
 };
 
+const DEATH_LABELS: Record<string, string> = {
+  Bludgeoning: "Bludgeoned",
+  Gravity: "Fell to death",
+  Blast: "Blown up",
+  Strangulation: "Strangled",
+  Suffocation: "Suffocated",
+  Mauling: "Mauled",
+  Gunshots: "Shot",
+  Crushing: "Crushed",
+  Drowning: "Drowned",
+  Abandoned: "Left behind",
+  Electrocution: "Electrocuted",
+  Kicking: "Kicked",
+  Burning: "Burned",
+  Stabbing: "Stabbed",
+  Fan: "Shredded by a fan",
+  Inertia: "Crashed",
+  Snipping: "Snipped",
+  Scratching: "Scratched",
+};
+
+/** Lethal Company CauseOfDeath name -> readable label. */
+export const deathLabel = (cause: string | null) => (cause ? (DEATH_LABELS[cause] ?? cause) : "Unknown");
+
 export const shortMoon = (moon: string) => moon.slice(0, 3);

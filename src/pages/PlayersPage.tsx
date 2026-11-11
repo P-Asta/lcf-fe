@@ -9,13 +9,15 @@ import { EmptyState, ErrorState } from "@/components/StateBlock";
 import { Caption, Text } from "@/components/typography/Text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Stack } from "@/components/layout/Stack";
-import { usePlayers } from "@/hooks/queries";
+import { BadgeRow } from "@/components/BadgeIcon";
+import { useBadges, usePlayers } from "@/hooks/queries";
 import { fmtPct, fmtTr } from "@/lib/format";
 
 const PAGE = 18;
 
 export function PlayersPage() {
   const { data, error, isPending } = usePlayers();
+  const badges = useBadges().data?.badges;
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
@@ -69,6 +71,7 @@ export function PlayersPage() {
                       {e.name}
                     </Text>
                     <RankBadge rank={e.rank} />
+                    <BadgeRow ids={e.badges} defs={badges} max={4} />
                   </span>
                   <Caption>
                     {e.position != null ? `#${e.position} · ${fmtTr(e.tr)} TR · ${fmtPct(e.wins, e.games)} win rate` : "No ranked games yet"}

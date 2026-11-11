@@ -65,6 +65,9 @@ export type PlayerResponse = {
   peak_tr: number | null;
   ranked_total: number;
   matches: Match[];
+  badges: PlayerBadge[];
+  /** How this player died (all match kinds), most frequent first. `cause` null = unknown. */
+  death_causes: { cause: string | null; count: number }[];
 };
 
 export type MoonLeader = {
@@ -98,6 +101,8 @@ export type PlayerListEntry = {
   position: number | null;
   games: number;
   wins: number;
+  /** Ids of the badges this player holds. */
+  badges: number[];
 };
 
 export type PlayerListResponse = { total: number; ranked_total: number; entries: PlayerListEntry[] };
@@ -128,6 +133,35 @@ export type AuditEntry = {
   name: string | null;
 };
 
+export type BadgeDef = {
+  id: number;
+  name: string;
+  description: string;
+  /** Server path (prefix with the API base via `assetUrl`), null until an image is uploaded. */
+  image: string | null;
+  holders: number;
+  created: number;
+};
+
+export type PlayerBadge = BadgeDef & { granted: number };
+
+export type FamilyEntry = {
+  steam_id: string;
+  owner_steam_id: string;
+  /** The game owner's LCF name, when the owner plays LCF too. */
+  owner_name: string | null;
+  name: string;
+  avatar: string | null;
+  last_ip: string;
+  attempts: number;
+  first_seen: number;
+  last_seen: number;
+  verified: boolean;
+  verified_at: number;
+};
+
+export type FamilyResponse = { allow_all: boolean; entries: FamilyEntry[] };
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -138,6 +172,9 @@ export class ApiError extends Error {
 }
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+
+/** Absolute URL for a path the API returned (e.g. a badge image). */
+export const assetUrl = (path: string) => `${BASE}${path}`;
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
@@ -162,11 +199,31 @@ export const adminApi = {
   /** `days` 0 = permanent. */
   ban: (pw: string, steamId: string, days: number, reason: string) => adminFetch<{ ok: true }>(pw, "/api/admin/ban", { steam_id: steamId, days, reason }),
   unban: (pw: string, steamId: string) => adminFetch<{ ok: true }>(pw, "/api/admin/unban", { steam_id: steamId }),
+  family: (pw: string) => adminFetch<FamilyResponse>(pw, "/api/admin/family"),
+  setFamilyVerified: (pw: string, steamId: string, verified: boolean) =>
+    adminFetch<{ ok: true }>(pw, "/api/admin/family/verify", { steam_id: steamId, verified }),
+  deleteFamily: (pw: string, steamId: string) => adminFetch<{ ok: true }>(pw, "/api/admin/family/delete", { steam_id: steamId }),
+  createBadge: (pw: string, name: string, description: string) => adminFetch<BadgeDef>(pw, "/api/admin/badges", { name, description }),
+  updateBadge: (pw: string, id: number, name: string, description: string) => adminFetch<BadgeDef>(pw, `/api/admin/badges/${id}`, { name, description }),
+  /** Raw file upload: PNG, JPEG, GIF or WebP up to 512 KB. */
+  uploadBadgeImage: async (pw: string, id: number, file: Blob) => {
+    const res = await fetch(`${BASE}/api/admin/badges/${id}/image`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${pw}`, "Content-Type": file.type || "application/octet-stream" },
+      body: file,
+    });
+    if (!res.ok) throw new ApiError(res.status, (await res.text()) || res.statusText);
+    return res.json() as Promise<BadgeDef>;
+  },
+  deleteBadge: (pw: string, id: number) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/delete`, {}),
+  grantBadge: (pw: string, id: number, steamId: string) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/grant`, { steam_id: steamId }),
+  revokeBadge: (pw: string, id: number, steamId: string) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/revoke`, { steam_id: steamId }),
 };
 
 export const api = {
   leaderboard: () => get<LeaderboardResponse>("/api/leaderboard?limit=1000"),
   players: () => get<PlayerListResponse>("/api/players"),
+  badges: () => get<{ badges: BadgeDef[] }>("/api/badges"),
   player: (steamId: string) => get<PlayerResponse>(`/api/player/${encodeURIComponent(steamId)}`),
   moons: () => get<MoonsResponse>("/api/moons"),
   stats: () => get<StatsResponse>("/api/stats"),

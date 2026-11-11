@@ -2,6 +2,7 @@ import { ExternalLink, Swords, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { Avatar } from "@/components/Avatar";
+import { BadgeIcon } from "@/components/BadgeIcon";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/DataTable";
 import { EventsCell } from "@/components/MatchRow";
 import { MoonRadar } from "@/components/MoonRadar";
@@ -19,7 +20,7 @@ import { Stack } from "@/components/layout/Stack";
 import { usePlayer } from "@/hooks/queries";
 import { achievements } from "@/lib/achievements";
 import { ApiError, type PlayerResponse } from "@/lib/api";
-import { eventKindLabel, fmtDate, fmtMoney, fmtPct, fmtSigned, fmtTr, kindLabel } from "@/lib/format";
+import { deathLabel, eventKindLabel, fmtDate, fmtMoney, fmtPct, fmtSigned, fmtTr, kindLabel } from "@/lib/format";
 import { playerStats, type Outcome, type PlayerStats } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,7 @@ export function PlayerPage() {
       <MoonPanel stats={stats} />
       <BestRecords stats={stats} />
       <EventStats stats={stats} />
+      <DeathCauses data={data} />
       <Achievements data={data} stats={stats} />
       <RecentMatches stats={stats} />
     </Stack>
@@ -63,6 +65,15 @@ function PlayerHeader({ data }: { data: PlayerResponse }) {
             <RankBadge rank={p.rank} />
             <Badge>{fmtTr(p.tr)} TR</Badge>
           </div>
+          {data.badges.length > 0 && (
+            <ul aria-label="Badges" className="flex flex-wrap items-center gap-2">
+              {data.badges.map((b) => (
+                <li key={b.id}>
+                  <BadgeIcon badge={b} size="md" />
+                </li>
+              ))}
+            </ul>
+          )}
           <Caption className="text-body">Joined {fmtDate(data.joined)}</Caption>
           <a
             href={`https://steamcommunity.com/profiles/${p.steam_id}`}
@@ -190,6 +201,32 @@ function EventStats({ stats }: { stats: PlayerStats }) {
           <StatCard key={e.kind} label={eventKindLabel(e.kind)} value={fmtPct(e.wins, e.games)} accent sub={`${e.wins} of ${e.games} won`} />
         ))}
       </div>
+    </Section>
+  );
+}
+
+function DeathCauses({ data }: { data: PlayerResponse }) {
+  const list = data.death_causes ?? [];
+  const total = list.reduce((n, d) => n + d.count, 0);
+  if (total === 0) return null;
+  const max = Math.max(...list.map((d) => d.count));
+  return (
+    <Section title="Causes of death" aside={`${total} ${total === 1 ? "death" : "deaths"}`}>
+      <Panel className="p-5">
+        <ul className="flex flex-col gap-3">
+          {list.map((d) => (
+            <li key={d.cause ?? "unknown"} className="grid grid-cols-[9rem_1fr_3.5rem] items-center gap-3 text-body">
+              <span className={cn("truncate", d.cause ? "text-fg" : "text-muted")}>{deathLabel(d.cause)}</span>
+              <span className="h-2 overflow-hidden rounded-pill bg-surface-3" aria-hidden>
+                <span className="block h-full rounded-pill bg-danger" style={{ width: `${(d.count / max) * 100}%` }} />
+              </span>
+              <span className="text-right text-muted tabular-nums">
+                {d.count} <span className="text-caption">({fmtPct(d.count, total)})</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Panel>
     </Section>
   );
 }
