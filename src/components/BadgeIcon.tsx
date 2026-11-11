@@ -2,10 +2,11 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Award } from "lucide-react";
 import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useBadges } from "@/hooks/queries";
 import { assetUrl, type BadgeDef } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-const iconVariants = cva("inline-flex shrink-0 items-center justify-center overflow-hidden rounded-control bg-surface-3 text-primary-300", {
+const iconVariants = cva("inline-flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-control bg-surface-3 text-primary-300", {
   variants: {
     size: {
       sm: "size-5 [&_svg]:size-3.5",
@@ -22,7 +23,7 @@ export function BadgeImage({ badge, size, className }: { badge: Pick<BadgeDef, "
   return (
     <span className={cn(iconVariants({ size }), className)}>
       {badge.image && !failed ? (
-        <img src={assetUrl(badge.image)} alt="" loading="lazy" className="size-full object-contain" onError={() => setFailed(true)} />
+        <img src={assetUrl(badge.image)} alt="" loading="lazy" className="aspect-square size-full object-cover" onError={() => setFailed(true)} />
       ) : (
         <Award aria-hidden />
       )}
@@ -60,4 +61,11 @@ export function BadgeRow({ ids, defs, size = "sm", max = 6 }: { ids: number[]; d
       {list.length > max && <span className="text-caption text-muted">+{list.length - max}</span>}
     </span>
   );
+}
+
+export function WornBadge({ id, size = "sm" }: { id: number | null | undefined } & VariantProps<typeof iconVariants>) {
+  const defs = useBadges().data?.badges;
+  const badge = id == null ? undefined : defs?.find((d) => d.id === id);
+  if (!badge) return null;
+  return <BadgeIcon badge={badge} size={size} />;
 }

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Table, TBody, TD, TH, THead, TR, RankCell } from "@/components/DataTable";
 import { Pagination } from "@/components/Pagination";
 import { PlayerLink } from "@/components/PlayerLink";
+import { WornBadge } from "@/components/BadgeIcon";
 import { RankBadge } from "@/components/RankBadge";
 import { SearchField } from "@/components/SearchField";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
@@ -96,6 +97,7 @@ export function LeaderboardPage() {
                 <TD>
                   <span className="flex items-center gap-2">
                     <PlayerLink player={e} />
+                    <WornBadge id={e.badge} />
                     <RankBadge rank={e.rank} />
                   </span>
                 </TD>

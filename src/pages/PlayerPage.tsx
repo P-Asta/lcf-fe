@@ -2,7 +2,7 @@ import { ExternalLink, Swords, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { Avatar } from "@/components/Avatar";
-import { BadgeIcon } from "@/components/BadgeIcon";
+import { BadgeIcon, WornBadge } from "@/components/BadgeIcon";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/DataTable";
 import { EventsCell } from "@/components/MatchRow";
 import { MoonRadar } from "@/components/MoonRadar";
@@ -62,7 +62,8 @@ function PlayerHeader({ data }: { data: PlayerResponse }) {
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <Headline className="truncate">{p.name}</Headline>
-            <RankBadge rank={p.rank} />
+            <WornBadge id={p.badge} size="md" />
+            <RankBadge rank={p.rank} size="md" />
             <Badge>{fmtTr(p.tr)} TR</Badge>
           </div>
           {data.badges.length > 0 && (

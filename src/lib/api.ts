@@ -12,6 +12,7 @@ export type LeaderboardEntry = {
   rank: string;
   games: number;
   wins: number;
+  badge: number | null;
 };
 
 export type LeaderboardResponse = {
@@ -30,6 +31,18 @@ export type Profile = {
   games: number;
   wins: number;
   position: number | null;
+  badge: number | null;
+};
+
+export type RankIcon = {
+  id: string;
+  name: string;
+  top: number;
+  /** SVG or PNG, server path. */
+  icon: string;
+  /** Square PNG (what the mod shows), server path. */
+  png: string;
+  custom: boolean;
 };
 
 export type MatchSide = {
@@ -103,6 +116,8 @@ export type PlayerListEntry = {
   wins: number;
   /** Ids of the badges this player holds. */
   badges: number[];
+  /** The badge the player wears next to their name. */
+  badge: number | null;
 };
 
 export type PlayerListResponse = { total: number; ranked_total: number; entries: PlayerListEntry[] };
@@ -215,6 +230,17 @@ export const adminApi = {
     if (!res.ok) throw new ApiError(res.status, (await res.text()) || res.statusText);
     return res.json() as Promise<BadgeDef>;
   },
+  /** SVG or PNG up to 512 KB; replaces the rank's icon on the site and in the mod. */
+  uploadRankIcon: async (pw: string, id: string, file: Blob) => {
+    const res = await fetch(`${BASE}/api/admin/ranks/${id}/icon`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${pw}`, "Content-Type": file.type || "application/octet-stream" },
+      body: file,
+    });
+    if (!res.ok) throw new ApiError(res.status, (await res.text()) || res.statusText);
+    return res.json() as Promise<{ ranks: RankIcon[] }>;
+  },
+  resetRankIcon: (pw: string, id: string) => adminFetch<{ ranks: RankIcon[] }>(pw, `/api/admin/ranks/${id}/reset`, {}),
   deleteBadge: (pw: string, id: number) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/delete`, {}),
   grantBadge: (pw: string, id: number, steamId: string) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/grant`, { steam_id: steamId }),
   revokeBadge: (pw: string, id: number, steamId: string) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/revoke`, { steam_id: steamId }),
@@ -224,6 +250,7 @@ export const api = {
   leaderboard: () => get<LeaderboardResponse>("/api/leaderboard?limit=1000"),
   players: () => get<PlayerListResponse>("/api/players"),
   badges: () => get<{ badges: BadgeDef[] }>("/api/badges"),
+  ranks: () => get<{ ranks: RankIcon[] }>("/api/ranks"),
   player: (steamId: string) => get<PlayerResponse>(`/api/player/${encodeURIComponent(steamId)}`),
   moons: () => get<MoonsResponse>("/api/moons"),
   stats: () => get<StatsResponse>("/api/stats"),
