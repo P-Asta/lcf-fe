@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/", label: "Leaderboard", end: true },
+  { to: "/daily", label: "Daily", end: false },
   { to: "/moons", label: "Moons", end: false },
   { to: "/players", label: "Players", end: false },
 ];

@@ -9,6 +9,9 @@ export const useLeaderboard = () =>
 export const usePlayers = () =>
   useQuery({ queryKey: ["players"], queryFn: api.players, refetchInterval: (q) => errorRetry(q) || 60_000 });
 
+export const useDaily = () =>
+  useQuery({ queryKey: ["daily"], queryFn: api.daily, refetchInterval: (q) => errorRetry(q) || 60_000 });
+
 export const useRanks = () =>
   useQuery({ queryKey: ["ranks"], queryFn: api.ranks, staleTime: 300_000, refetchInterval: (q) => errorRetry(q) || 600_000 });
 

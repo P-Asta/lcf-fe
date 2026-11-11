@@ -59,6 +59,30 @@ export type MatchSide = {
 
 export type MatchKind = "ranked" | "quick" | "public" | "private";
 
+export type DailySettings = {
+  seed: number;
+  moon: string;
+  banned: string[];
+  weather: string;
+  event: GameEvent | null;
+  events: GameEvent[];
+};
+
+export type DailyRow = { place: number; steam_id: string; name: string; avatar: string | null; score: number };
+
+export type DailyResponse = {
+  day: string;
+  settings: DailySettings;
+  /** Seconds until the next challenge (00:00 UTC). */
+  ends_in: number;
+  /** 00:00 - 00:01 UTC: closed. */
+  locked: boolean;
+  first: DailyRow[];
+  best: DailyRow[];
+};
+
+export type DailyAdminResponse = DailyResponse & { moons: string[]; tools: string[]; event_kinds: string[] };
+
 export type Match = {
   id: string;
   kind: MatchKind;
@@ -81,6 +105,8 @@ export type PlayerResponse = {
   ranked_total: number;
   matches: Match[];
   badges: PlayerBadge[];
+  /** Past daily challenges won: on the first-play board and on the best board. */
+  daily_wins: { first: number; best: number };
   /** How this player died (all match kinds), most frequent first. `cause` null = unknown. */
   death_causes: { cause: string | null; count: number }[];
 };
@@ -233,6 +259,10 @@ export const adminApi = {
   /** `days` 0 = permanent. */
   ban: (pw: string, steamId: string, days: number, reason: string) => adminFetch<{ ok: true }>(pw, "/api/admin/ban", { steam_id: steamId, days, reason }),
   unban: (pw: string, steamId: string) => adminFetch<{ ok: true }>(pw, "/api/admin/unban", { steam_id: steamId }),
+  daily: (pw: string) => adminFetch<DailyAdminResponse>(pw, "/api/admin/daily"),
+  /** Replaces today's challenge: today's runs are deleted and everyone sees the reveal again. */
+  setDaily: (pw: string, s: DailySettings) => adminFetch<DailyAdminResponse>(pw, "/api/admin/daily", s),
+  rerollDaily: (pw: string) => adminFetch<DailyAdminResponse>(pw, "/api/admin/daily/reroll", {}),
   server: (pw: string) => adminFetch<ServerResponse>(pw, "/api/admin/server"),
   setEvents: (pw: string, c: EventConfig) => adminFetch<ServerResponse>(pw, "/api/admin/events", c),
   /** `minutes` until the shutdown; `cancel` calls a scheduled one off. */
@@ -274,6 +304,7 @@ export const api = {
   players: () => get<PlayerListResponse>("/api/players"),
   badges: () => get<{ badges: BadgeDef[] }>("/api/badges"),
   ranks: () => get<{ ranks: RankIcon[] }>("/api/ranks"),
+  daily: () => get<DailyResponse>("/api/daily"),
   player: (steamId: string) => get<PlayerResponse>(`/api/player/${encodeURIComponent(steamId)}`),
   moons: () => get<MoonsResponse>("/api/moons"),
   stats: () => get<StatsResponse>("/api/stats"),

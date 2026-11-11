@@ -105,4 +105,25 @@ const DEATH_LABELS: Record<string, string> = {
 /** Lethal Company CauseOfDeath name -> readable label. */
 export const deathLabel = (cause: string | null) => (cause ? (DEATH_LABELS[cause] ?? cause) : "Unknown");
 
+const TOOL_LABELS: Record<string, string> = {
+  shovel: "Shovel",
+  cruiser: "Cruiser",
+  jetpack: "Jetpack",
+  flash: "Flashlights",
+  keys: "Keys",
+  beltbag: "Belt bag",
+  stungrenade: "Stun grenade",
+  weedkiller: "Weed killer",
+  tzp: "TZP-Inhalant",
+  ladder: "Extension ladder",
+};
+
+export const toolLabel = (t: string) => TOOL_LABELS[t] ?? t;
+
+/** "05:12:33" */
+export const fmtCountdown = (secs: number) => {
+  const s = Math.max(0, Math.floor(secs));
+  return [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map((n) => String(n).padStart(2, "0")).join(":");
+};
+
 export const shortMoon = (moon: string) => moon.slice(0, 3);

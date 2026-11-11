@@ -119,6 +119,8 @@ function RatingCards({ data, stats }: { data: PlayerResponse; stats: PlayerStats
         <StatCard label="Matches" value={stats.games} sub={`${stats.wins} wins`} />
         <StatCard label="Win rate" value={fmtPct(stats.wins, stats.games)} sub={`${stats.losses} losses`} />
         <StatCard label="Ladder rank" value={p.position != null ? `#${p.position}` : "-"} sub={p.position != null ? `of ${data.ranked_total} players` : "No rated games"} />
+        <StatCard label="Daily wins - first play" value={data.daily_wins?.first ?? 0} sub="Days won on the first-run board" />
+        <StatCard label="Daily wins - best" value={data.daily_wins?.best ?? 0} sub="Days won on the best-run board" />
       </div>
     </Section>
   );

@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { PageShell } from "@/components/layout/PageShell";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AdminPage } from "@/pages/AdminPage";
+import { DailyPage } from "@/pages/DailyPage";
 import { LeaderboardPage } from "@/pages/LeaderboardPage";
 import { MoonsPage } from "@/pages/MoonsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -21,6 +22,7 @@ export function App() {
           <PageShell>
             <Routes>
               <Route path="/" element={<LeaderboardPage />} />
+              <Route path="/daily" element={<DailyPage />} />
               <Route path="/moons" element={<MoonsPage />} />
               <Route path="/players" element={<PlayersPage />} />
               <Route path="/players/:steamId" element={<PlayerPage />} />
