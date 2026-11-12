@@ -37,6 +37,9 @@ const EVENT_LABELS: Record<string, string> = {
   no_weight: "No weight",
   sid: "Single item day",
   meteor_shower: "Meteor shower",
+  booombers: "Booombers",
+  outside_meta: "Outside is meta",
+  no_fire_exit: "You can't go fire",
   none: "No event",
 };
 

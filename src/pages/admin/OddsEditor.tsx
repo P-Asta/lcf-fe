@@ -19,7 +19,7 @@ const INFEST_LABELS: Record<string, string> = { hoarding_bug: "Hoarding bug", nu
 
 const DEFAULTS: Odds = {
   no_event: 0.3,
-  events: { weather: 50, indoor_fog: 10, infestation: 10, hardcore: 20, allow_twohanded: 10, no_weight: 10, sid: 10, meteor_shower: 10 },
+  events: { weather: 50, indoor_fog: 10, infestation: 10, hardcore: 20, allow_twohanded: 10, no_weight: 10, sid: 10, meteor_shower: 10, booombers: 10, outside_meta: 10, no_fire_exit: 10 },
   weather: { rainy: 2, stormy: 2, flooded: 1, eclipsed: 1 },
   infestation: { hoarding_bug: 1, nutcracker: 1 },
 };
