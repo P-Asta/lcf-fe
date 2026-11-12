@@ -190,7 +190,15 @@ export type BadgeDef = {
   image: string | null;
   holders: number;
   created: number;
+  /** Name prefix shown as "[prefix]" before the wearer's name (empty = the badge name). */
+  prefix: string;
+  /** "#rrggbb" or "" — color1 only = solid, both = a gradient over the letters. */
+  color1: string;
+  color2: string;
 };
+
+/** A badge's name prefix settings. */
+export type BadgeStyle = { prefix: string; color1: string; color2: string };
 
 export type PlayerBadge = BadgeDef & { granted: number };
 
@@ -287,8 +295,10 @@ export const adminApi = {
   setFamilyVerified: (pw: string, steamId: string, verified: boolean) =>
     adminFetch<{ ok: true }>(pw, "/api/admin/family/verify", { steam_id: steamId, verified }),
   deleteFamily: (pw: string, steamId: string) => adminFetch<{ ok: true }>(pw, "/api/admin/family/delete", { steam_id: steamId }),
-  createBadge: (pw: string, name: string, description: string) => adminFetch<BadgeDef>(pw, "/api/admin/badges", { name, description }),
-  updateBadge: (pw: string, id: number, name: string, description: string) => adminFetch<BadgeDef>(pw, `/api/admin/badges/${id}`, { name, description }),
+  createBadge: (pw: string, name: string, description: string, style: BadgeStyle) =>
+    adminFetch<BadgeDef>(pw, "/api/admin/badges", { name, description, ...style }),
+  updateBadge: (pw: string, id: number, name: string, description: string, style: BadgeStyle) =>
+    adminFetch<BadgeDef>(pw, `/api/admin/badges/${id}`, { name, description, ...style }),
   /** Raw file upload: PNG, JPEG, GIF or WebP up to 512 KB. */
   uploadBadgeImage: async (pw: string, id: number, file: Blob) => {
     const res = await fetch(`${BASE}/api/admin/badges/${id}/image`, {

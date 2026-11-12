@@ -11,7 +11,7 @@ import { Caption, Text } from "@/components/typography/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { adminApi, api, type AdminPlayer, type BadgeDef } from "@/lib/api";
+import { adminApi, api, type AdminPlayer, type BadgeDef, type BadgeStyle } from "@/lib/api";
 
 const MAX_BYTES = 512 * 1024;
 const TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
@@ -86,22 +86,127 @@ function ImagePicker({ file, onFile, current, label }: { file: File | null; onFi
   );
 }
 
+const hexToRgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const rgbToHex = (c: number[]) => "#" + c.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
+
+/**
+ * Per-letter colors of a prefix, the way the mod draws it: one color = solid,
+ * two = each letter blended from the first to the second (brackets included).
+ */
+export function prefixLetters(text: string, colors: string[]) {
+  const shown = `[${text}]`;
+  const chars = Array.from(shown);
+  const [a, b] = colors;
+  return chars.map((ch, i) => {
+    if (!a) return { ch, color: undefined };
+    if (!b || chars.length < 2) return { ch, color: a };
+    const t = i / (chars.length - 1);
+    const ca = hexToRgb(a);
+    const cb = hexToRgb(b);
+    return { ch, color: rgbToHex(ca.map((v, k) => v + (cb[k] - v) * t)) };
+  });
+}
+
+export function PrefixPreview({ text, colors, name }: { text: string; colors: string[]; name?: string }) {
+  if (!text) return null;
+  return (
+    <span className="font-mono text-body">
+      {prefixLetters(text, colors).map((l, i) => (
+        <span key={i} style={{ color: l.color }}>
+          {l.ch}
+        </span>
+      ))}
+      {name !== undefined && <span className="text-muted"> {name}</span>}
+    </span>
+  );
+}
+
+type ColorMode = "default" | "solid" | "gradient";
+
+function PrefixFields({ name, style, onChange }: { name: string; style: BadgeStyle; onChange: (s: BadgeStyle) => void }) {
+  const mode: ColorMode = style.color2 ? "gradient" : style.color1 ? "solid" : "default";
+  const setMode = (m: ColorMode) =>
+    onChange({
+      ...style,
+      color1: m === "default" ? "" : style.color1 || "#fdac0d",
+      color2: m === "gradient" ? style.color2 || "#ff3b1f" : "",
+    });
+  const shownText = style.prefix.trim() || name.trim();
+  const colors = [style.color1, style.color2].filter(Boolean);
+  return (
+    <Stack gap={2}>
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+        <label className="flex flex-col gap-1">
+          <Caption>Name prefix</Caption>
+          <Input
+            value={style.prefix}
+            maxLength={16}
+            onChange={(e) => onChange({ ...style, prefix: e.target.value })}
+            placeholder={name.trim() ? `Empty = "${name.trim()}"` : "Empty = the badge name"}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <Caption>Prefix color</Caption>
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value as ColorMode)}
+            className="h-9 cursor-pointer rounded-control bg-surface-2 px-3 text-body text-fg outline-none focus-visible:outline-2 focus-visible:outline-primary-400"
+          >
+            <option value="default">Default</option>
+            <option value="solid">Solid</option>
+            <option value="gradient">Gradient</option>
+          </select>
+        </label>
+      </div>
+      {mode !== "default" && (
+        <Stack direction="row" align="center" gap={3}>
+          <input
+            type="color"
+            aria-label="Prefix color"
+            value={style.color1 || "#fdac0d"}
+            onChange={(e) => onChange({ ...style, color1: e.target.value })}
+            className="h-8 w-12 cursor-pointer rounded-control bg-transparent"
+          />
+          {mode === "gradient" && (
+            <input
+              type="color"
+              aria-label="Gradient end color"
+              value={style.color2 || "#ff3b1f"}
+              onChange={(e) => onChange({ ...style, color2: e.target.value })}
+              className="h-8 w-12 cursor-pointer rounded-control bg-transparent"
+            />
+          )}
+        </Stack>
+      )}
+      {shownText && (
+        <Caption>
+          In chat: <PrefixPreview text={shownText} colors={colors} name="PlayerName" />
+        </Caption>
+      )}
+    </Stack>
+  );
+}
+
+const styleOf = (b?: BadgeDef): BadgeStyle => ({ prefix: b?.prefix ?? "", color1: b?.color1 ?? "", color2: b?.color2 ?? "" });
+
 function CreateBadge({ pw }: { pw: string }) {
   const refresh = useBadgeRefresh();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [style, setStyle] = useState<BadgeStyle>(styleOf());
   const [file, setFile] = useState<File | null>(null);
   const [fileErr, setFileErr] = useState<string | null>(null);
 
   const create = useMutation({
     mutationFn: async () => {
-      const b = await adminApi.createBadge(pw, name.trim(), description.trim());
+      const b = await adminApi.createBadge(pw, name.trim(), description.trim(), style);
       if (file) await adminApi.uploadBadgeImage(pw, b.id, file);
       return b;
     },
     onSuccess: () => {
       setName("");
       setDescription("");
+      setStyle(styleOf());
       setFile(null);
       refresh();
     },
@@ -142,6 +247,7 @@ function CreateBadge({ pw }: { pw: string }) {
             <Input value={description} maxLength={200} onChange={(e) => setDescription(e.target.value)} placeholder="Shown when hovering the badge" />
           </label>
         </div>
+        <PrefixFields name={name} style={style} onChange={setStyle} />
         {create.error && (
           <Text variant="caption" tone="danger" role="alert">
             {errText(create.error)}
@@ -161,6 +267,7 @@ function BadgeCard({ pw, badge, players }: { pw: string; badge: BadgeDef; player
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(badge.name);
   const [description, setDescription] = useState(badge.description);
+  const [style, setStyle] = useState<BadgeStyle>(styleOf(badge));
   const [file, setFile] = useState<File | null>(null);
   const [fileErr, setFileErr] = useState<string | null>(null);
   const [who, setWho] = useState("");
@@ -174,7 +281,7 @@ function BadgeCard({ pw, badge, players }: { pw: string; badge: BadgeDef; player
 
   const save = useMutation({
     mutationFn: async () => {
-      await adminApi.updateBadge(pw, badge.id, name.trim(), description.trim());
+      await adminApi.updateBadge(pw, badge.id, name.trim(), description.trim(), style);
       if (file) await adminApi.uploadBadgeImage(pw, badge.id, file);
     },
     onSuccess: () => {
@@ -224,6 +331,7 @@ function BadgeCard({ pw, badge, players }: { pw: string; badge: BadgeDef; player
             <Caption>Description</Caption>
             <Input value={description} maxLength={200} onChange={(e) => setDescription(e.target.value)} />
           </label>
+          <PrefixFields name={name} style={style} onChange={setStyle} />
           <Stack direction="row" gap={2}>
             <Button type="submit" variant="primary" size="sm" disabled={save.isPending || !name.trim()}>
               {save.isPending ? "Saving…" : "Save"}
@@ -236,6 +344,7 @@ function BadgeCard({ pw, badge, players }: { pw: string; badge: BadgeDef; player
                 setEditing(false);
                 setName(badge.name);
                 setDescription(badge.description);
+                setStyle(styleOf(badge));
                 setFile(null);
                 setFileErr(null);
               }}
@@ -252,6 +361,9 @@ function BadgeCard({ pw, badge, players }: { pw: string; badge: BadgeDef; player
               {badge.name}
             </Text>
             <Caption className="break-words">{badge.description || "No description"}</Caption>
+            <Caption>
+              Prefix: <PrefixPreview text={badge.prefix?.trim() || badge.name} colors={[badge.color1, badge.color2].filter(Boolean)} />
+            </Caption>
             <Caption>
               {holders.length} {holders.length === 1 ? "holder" : "holders"}
             </Caption>
