@@ -120,7 +120,7 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
       <Panel className="flex flex-col gap-4 p-4">
         <Stack gap={1}>
           <Text variant="title">Hidden events</Text>
-          <Caption>Hidden events never come up in ranked or in random rolls. Rooms can still pick them by hand (shown dimmed in the game).</Caption>
+          <Caption>Hidden events never come up in ranked, in random rolls, or as seed bonus events, and the event slot machine does not show them. Rooms can still pick them by hand (shown dimmed in the game).</Caption>
         </Stack>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {data.event_kinds.map((k) => {
@@ -148,6 +148,25 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
           })}
         </div>
 
+        <Stack gap={1}>
+          <Text variant="title">Quick play preset</Text>
+          <Caption>
+            The rules of every quick play match, the same presets as the custom rooms. Default: the ranked rules. Monster hunter: 10x enemies with no
+            limits and nothing invincible, 20+ inside, 1 life, the most kills wins, no tool bans and no event. Speedrun: the first to bring 20% of the
+            moon&apos;s scrap back to the ship wins.
+          </Caption>
+        </Stack>
+        <select
+          aria-label="Quick play preset"
+          value={ev.quick_preset ?? "default"}
+          disabled={save.isPending}
+          onChange={(e) => set({ quick_preset: e.target.value })}
+          className={selectCls}
+        >
+          <option value="default">Default (ranked rules)</option>
+          <option value="hunter">Monster hunter</option>
+          <option value="speedrun">Speedrun (20%)</option>
+        </select>
         <Stack gap={1}>
           <Text variant="title">Quick play event</Text>
           <Caption>Quick play is unrated, so it can use events ranked does not: every event (hidden ones too), the ranked rules, none, or one fixed event.</Caption>

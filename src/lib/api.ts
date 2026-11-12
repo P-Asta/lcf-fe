@@ -225,6 +225,8 @@ export type EventConfig = {
   /** "roll_all" | "roll" | "none" | an event kind. */
   quick_event: string;
   quick_detail: string | null;
+  /** Quick play rules: "default" (ranked rules) | "hunter" | "speedrun". */
+  quick_preset: string;
   odds: Odds;
 };
 
