@@ -2,6 +2,9 @@ import { ExternalLink, Swords, UserX } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { Avatar } from "@/components/Avatar";
+import { PageTitle } from "@/components/motion/PageTitle";
+import GlareHover from "@/components/reactbits/GlareHover";
+import TiltedCard from "@/components/reactbits/TiltedCard";
 import { BadgeIcon, WornBadges } from "@/components/BadgeIcon";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/DataTable";
 import { EventsCell } from "@/components/MatchRow";
@@ -10,7 +13,7 @@ import { PlayerLink } from "@/components/PlayerLink";
 import { RankBadge } from "@/components/RankBadge";
 import { StatCard, StatCardSkeleton } from "@/components/StatCard";
 import { EmptyState, ErrorState } from "@/components/StateBlock";
-import { Caption, Headline, Text } from "@/components/typography/Text";
+import { Caption, Text } from "@/components/typography/Text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,10 +61,27 @@ function PlayerHeader({ data }: { data: PlayerResponse }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-6">
       <div className="flex items-center gap-4">
-        <Avatar src={data.avatar} name={p.name} size="xl" />
+        {data.avatar ? (
+          <TiltedCard
+            imageSrc={data.avatar}
+            altText={`${p.name}'s avatar`}
+            containerHeight="72px"
+            containerWidth="72px"
+            imageHeight="72px"
+            imageWidth="72px"
+            radius={6}
+            scaleOnHover={1.12}
+            rotateAmplitude={18}
+            showTooltip={false}
+            glare={0.6}
+            shadow={0.6}
+          />
+        ) : (
+          <Avatar src={data.avatar} name={p.name} size="xl" />
+        )}
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Headline className="truncate">{p.name}</Headline>
+            <PageTitle text={p.name} className="truncate" />
             <WornBadges ids={p.worn} size="md" />
             <RankBadge rank={p.rank} size="md" />
             <Badge>{fmtTr(p.tr)} TR</Badge>
@@ -70,7 +90,9 @@ function PlayerHeader({ data }: { data: PlayerResponse }) {
             <ul aria-label="Badges" className="flex flex-wrap items-center gap-2">
               {data.badges.map((b) => (
                 <li key={b.id}>
-                  <BadgeIcon badge={b} size="md" />
+                  <GlareHover glareColor="#ffffff" glareOpacity={0.4} glareSize={260} borderRadius="0.375rem" transitionDuration={600} className="cursor-pointer">
+                    <BadgeIcon badge={b} size="md" />
+                  </GlareHover>
                 </li>
               ))}
             </ul>

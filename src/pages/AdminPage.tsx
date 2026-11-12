@@ -15,6 +15,7 @@ import { Caption, Text } from "@/components/typography/Text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { OptionSelect } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminApi, ApiError, type AdminPlayer, type AuditEntry } from "@/lib/api";
 import { fmtDate, fmtTime, fmtTr } from "@/lib/format";
@@ -23,6 +24,7 @@ import { FamilyShare } from "@/pages/admin/FamilyShare";
 import { RankIcons } from "@/pages/admin/RankIcons";
 import { DailyPanel } from "@/pages/admin/DailyPanel";
 import { ServerPanel } from "@/pages/admin/ServerPanel";
+import { PageTitle } from "@/components/motion/PageTitle";
 
 const KEY = "lcf-admin-pw";
 const PAGE = 50;
@@ -133,9 +135,7 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
     <Stack gap={8}>
       <Stack direction="row" align="center" justify="between" gap={4} wrap>
         <Stack gap={1}>
-          <Text variant="headline" as="h1">
-            Admin
-          </Text>
+          <PageTitle text="Admin" />
           <Caption className="text-body">
             {players.data ? `${list.length} players · ${players.data.ranked_total} on the ladder · ${online} online · ${banned} banned` : "Loading players…"}
           </Caption>
@@ -364,19 +364,21 @@ function PlayerDetail({ pw, p }: { pw: string; p: AdminPlayer }) {
               if (window.confirm(`Ban ${p.name}${Number(days) ? ` for ${days} day(s)` : " permanently"}? They are kicked right away.`)) ban.mutate();
             }}
           >
-            <label className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               <Caption>Length</Caption>
-              <select
+              <OptionSelect
+                label="Ban length"
+                className="w-36"
                 value={days}
-                onChange={(e) => setDays(e.target.value)}
-                className="h-9 cursor-pointer rounded-pill bg-surface px-4 text-body text-fg outline-none focus-visible:outline-2 focus-visible:outline-primary-400"
-              >
-                <option value="1">1 day</option>
-                <option value="7">7 days</option>
-                <option value="30">30 days</option>
-                <option value="0">Permanent</option>
-              </select>
-            </label>
+                onChange={setDays}
+                options={[
+                  { value: "1", label: "1 day" },
+                  { value: "7", label: "7 days" },
+                  { value: "30", label: "30 days" },
+                  { value: "0", label: "Permanent" },
+                ]}
+              />
+            </div>
             <label className="flex min-w-48 flex-1 flex-col gap-1">
               <Caption>Reason</Caption>
               <Input value={reason} maxLength={200} onChange={(e) => setReason(e.target.value)} placeholder="Shown to the player" />

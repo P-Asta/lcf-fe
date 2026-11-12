@@ -12,6 +12,7 @@ import { Stack } from "@/components/layout/Stack";
 import { BadgeRow } from "@/components/BadgeIcon";
 import { useBadges, usePlayers } from "@/hooks/queries";
 import { fmtPct, fmtTr } from "@/lib/format";
+import { PageTitle } from "@/components/motion/PageTitle";
 
 const PAGE = 18;
 
@@ -34,9 +35,7 @@ export function PlayersPage() {
     <Stack gap={8}>
       <Stack direction="row" align="center" justify="between" gap={4} wrap>
         <Stack gap={1}>
-          <Text variant="headline" as="h1">
-            Players
-          </Text>
+          <PageTitle text="Players" />
           <Caption className="text-body">Everyone who has played LCF.</Caption>
         </Stack>
         <SearchField

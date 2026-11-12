@@ -8,18 +8,18 @@ import { EmptyState, ErrorState } from "@/components/StateBlock";
 import { StatCard, StatCardSkeleton } from "@/components/StatCard";
 import { Stack } from "@/components/layout/Stack";
 import { Section } from "@/components/layout/Section";
-import { Caption, Text } from "@/components/typography/Text";
+import { Caption } from "@/components/typography/Text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { OptionSelect } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDaily } from "@/hooks/queries";
 import type { DailyRow } from "@/lib/api";
 import { eventLabel, fmtCountdown, fmtMoney, toolLabel } from "@/lib/format";
+import { PageTitle } from "@/components/motion/PageTitle";
+import SplitFlapText from "@/components/reactbits/SplitFlapText";
 
 type Board = "first" | "best";
-
-const selectCls =
-  "h-9 cursor-pointer rounded-pill bg-surface px-4 text-body text-fg tabular-nums outline-none transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-primary-400";
 
 /** Counts down between refreshes from the server's "seconds left". */
 function useCountdown(seconds: number | undefined, at: number) {
@@ -86,22 +86,24 @@ export function DailyPage() {
     <Stack gap={8}>
       <Stack direction="row" align="center" justify="between" gap={4} wrap>
         <Stack gap={1}>
-          <Text variant="headline" as="h1">
-            Daily race
-          </Text>
+          <PageTitle text="Daily race" />
           <Caption className="text-body">Everyone runs the same moon, seed, events and tool bans, solo. A new race starts every day at 00:00 UTC.</Caption>
         </Stack>
         <Stack direction="row" align="center" gap={2}>
           <Button variant="secondary" size="icon" aria-label="Previous day" disabled={index < 0 || index >= days.length - 1} onClick={() => go(days[index + 1]?.day)}>
             <ChevronLeft aria-hidden />
           </Button>
-          <select aria-label="Race day" className={selectCls} value={data?.day ?? ""} onChange={(e) => go(e.target.value)} disabled={days.length === 0}>
-            {days.map((d) => (
-              <option key={d.day} value={d.day}>
-                {d.day === data?.today ? `${d.day}  (today)` : d.day}  ·  {d.players} {d.players === 1 ? "player" : "players"}
-              </option>
-            ))}
-          </select>
+          <OptionSelect
+            label="Race day"
+            className="w-64 tabular-nums"
+            value={data?.day ?? ""}
+            onChange={go}
+            disabled={days.length === 0}
+            options={days.map((d) => ({
+              value: d.day,
+              label: `${d.day === data?.today ? `${d.day} (today)` : d.day} · ${d.players} ${d.players === 1 ? "player" : "players"}`,
+            }))}
+          />
           <Button variant="secondary" size="icon" aria-label="Next day" disabled={index <= 0} onClick={() => go(days[index - 1]?.day)}>
             <ChevronRight aria-hidden />
           </Button>
@@ -110,10 +112,34 @@ export function DailyPage() {
 
       {data && (
         <Stack direction="row" align="center" gap={2} wrap>
-          {data.live ? (
-            <Badge className="h-8 px-3 text-body" tone={data.locked ? "danger" : "accent"}>
+          {data.live && !data.locked ? (
+            <>
+              <Badge className="h-8 px-3 text-body" tone="accent">
+                <CalendarClock aria-hidden className="size-4" />
+                Live · ends in
+              </Badge>
+              <span className="sr-only">{fmtCountdown(left)}</span>
+              <SplitFlapText
+                aria-hidden
+                text={fmtCountdown(left)}
+                charset="0123456789:"
+                loop={false}
+                padTo={8}
+                flipsPerChar={3}
+                flipDuration={0.08}
+                stagger={0.02}
+                fontSize={20}
+                gap={3}
+                tileRadius={4}
+                tileColor="#1f0f10"
+                textColor="#f2e8e8"
+                className="tabular-nums"
+              />
+            </>
+          ) : data.live ? (
+            <Badge className="h-8 px-3 text-body" tone="danger">
               <CalendarClock aria-hidden className="size-4" />
-              {data.locked ? "Opens at 00:01 UTC" : `Live  ·  ends in ${fmtCountdown(left)}`}
+              Opens at 00:01 UTC
             </Badge>
           ) : (
             <Badge className="h-8 px-3 text-body">Final results</Badge>

@@ -1,5 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
+import { AnimatedValue } from "@/components/motion/AnimatedValue";
+import { SpotlightPanel } from "@/components/motion/SpotlightPanel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/typography/Text";
 import { cn } from "@/lib/utils";
@@ -7,8 +9,8 @@ import { cn } from "@/lib/utils";
 const statCardVariants = cva("flex min-h-28 flex-col gap-1 rounded-card p-5", {
   variants: {
     tone: {
-      default: "bg-surface",
-      highlight: "bg-primary-600",
+      default: "",
+      highlight: "",
     },
   },
   defaultVariants: { tone: "default" },
@@ -27,12 +29,16 @@ type StatCardProps = VariantProps<typeof statCardVariants> & {
 export function StatCard({ label, value, sub, foot, tone, accent, big, className }: StatCardProps) {
   const hl = tone === "highlight";
   return (
-    <div className={cn(statCardVariants({ tone }), className)}>
+    <SpotlightPanel
+      surface={hl ? "var(--color-primary-600)" : "var(--color-surface)"}
+      light={hl ? "var(--color-primary-100)" : "var(--color-primary-300)"}
+      className={cn(statCardVariants({ tone }), className)}
+    >
       <Text variant="label" tone="inherit" className={hl ? "text-primary-100" : "text-muted"}>
         {label}
       </Text>
       <Text variant={big ? "display" : "stat"} tone="inherit" className={cn("mt-1", hl ? "text-white" : accent ? "text-primary-300" : "text-fg")}>
-        {value}
+        <AnimatedValue value={value} />
       </Text>
       {sub != null && (
         <Text variant="caption" tone="inherit" className={cn("mt-auto pt-2", hl ? "text-primary-100" : "text-muted")}>
@@ -44,7 +50,7 @@ export function StatCard({ label, value, sub, foot, tone, accent, big, className
           {foot}
         </Text>
       )}
-    </div>
+    </SpotlightPanel>
   );
 }
 

@@ -11,7 +11,7 @@ export function NotFoundPage() {
         This page does not exist.
       </EmptyState>
       <Button asChild variant="primary">
-        <Link to="/">Back to the leaderboard</Link>
+        <Link to="/league">Back to the leaderboard</Link>
       </Button>
     </Stack>
   );

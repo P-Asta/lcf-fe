@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImageUp, RotateCcw } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { PrefixFields } from "@/components/NamePrefix";
 import { ErrorState } from "@/components/StateBlock";
 import { Stack } from "@/components/layout/Stack";
 import { Panel } from "@/components/layout/Section";
@@ -8,9 +9,14 @@ import { Caption, Text } from "@/components/typography/Text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { adminApi, api, assetUrl, type RankIcon } from "@/lib/api";
+import { adminApi, api, assetUrl, type BadgeStyle, type RankIcon } from "@/lib/api";
+import { RANK_COLORS } from "@/lib/ranks";
 
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+const styleOf = (r: RankIcon): BadgeStyle => ({ prefix: r.prefix ?? "", color1: r.color1 ?? "", color2: r.color2 ?? "" });
+const cleanPrefix = (p: string) => p.replace(/[[\]<>]/g, "").trim().slice(0, 16);
+const sameStyle = (a: BadgeStyle, b: BadgeStyle) => cleanPrefix(a.prefix) === cleanPrefix(b.prefix) && a.color1 === b.color1 && a.color2 === b.color2;
 
 function RankCard({ pw, rank }: { pw: string; rank: RankIcon }) {
   const qc = useQueryClient();
@@ -18,8 +24,16 @@ function RankCard({ pw, rank }: { pw: string; rank: RankIcon }) {
   const done = (data: { ranks: RankIcon[] }) => qc.setQueryData(["ranks"], data);
   const upload = useMutation({ mutationFn: (f: File) => adminApi.uploadRankIcon(pw, rank.id, f), onSuccess: done });
   const reset = useMutation({ mutationFn: () => adminApi.resetRankIcon(pw, rank.id), onSuccess: done });
+  const saveStyle = useMutation({ mutationFn: (s: BadgeStyle) => adminApi.setRankStyle(pw, rank.id, s), onSuccess: done });
+  const [style, setStyle] = useState<BadgeStyle>(styleOf(rank));
+  const { mutate: save } = saveStyle;
+  useEffect(() => {
+    if (sameStyle(style, styleOf(rank))) return;
+    const t = window.setTimeout(() => save(style), 600);
+    return () => window.clearTimeout(t);
+  }, [style, rank, save]);
   const busy = upload.isPending || reset.isPending;
-  const err = upload.error ?? reset.error;
+  const err = upload.error ?? reset.error ?? saveStyle.error;
 
   return (
     <Panel className="flex flex-col gap-3 p-4">
@@ -61,6 +75,8 @@ function RankCard({ pw, rank }: { pw: string; rank: RankIcon }) {
           </Button>
         )}
       </Stack>
+      <PrefixFields style={style} onChange={setStyle} defaultText={rank.id.toUpperCase()} defaultColor={RANK_COLORS[rank.id] ?? "#fdac0d"} />
+      <Caption aria-live="polite">{saveStyle.isPending ? "Saving…" : sameStyle(style, styleOf(rank)) ? "Saved" : "Editing…"}</Caption>
       {err && (
         <Text variant="caption" tone="danger" role="alert">
           {errText(err)}
@@ -77,7 +93,7 @@ export function RankIcons({ pw }: { pw: string }) {
   return (
     <Stack gap={4}>
       <Caption className="text-body">
-        Rank icons are served by the server to the website and the mod. Upload an SVG or PNG (square, up to 512 KB); the mod gets a square PNG made from it.
+        Rank icons are served by the server to the website and the mod. Upload an SVG or PNG (square, up to 512 KB); the mod gets a square PNG made from it. The name prefix is what players wearing their rank emblem get in front of their name; changes save on their own.
       </Caption>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {q.data.ranks.map((r) => (

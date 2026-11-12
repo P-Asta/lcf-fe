@@ -4,12 +4,14 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { Avatar } from "@/components/Avatar";
 import { BadgeImage } from "@/components/BadgeIcon";
+import { PrefixFields, PrefixPreview } from "@/components/NamePrefix";
 import { EmptyState, ErrorState } from "@/components/StateBlock";
 import { Stack } from "@/components/layout/Stack";
 import { Panel } from "@/components/layout/Section";
 import { Caption, Text } from "@/components/typography/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminApi, api, type AdminPlayer, type BadgeDef, type BadgeStyle } from "@/lib/api";
 
@@ -86,107 +88,6 @@ function ImagePicker({ file, onFile, current, label }: { file: File | null; onFi
   );
 }
 
-const hexToRgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-const rgbToHex = (c: number[]) => "#" + c.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
-
-/**
- * Per-letter colors of a prefix, the way the mod draws it: one color = solid,
- * two = each letter blended from the first to the second (brackets included).
- */
-export function prefixLetters(text: string, colors: string[]) {
-  const shown = `[${text}]`;
-  const chars = Array.from(shown);
-  const [a, b] = colors;
-  return chars.map((ch, i) => {
-    if (!a) return { ch, color: undefined };
-    if (!b || chars.length < 2) return { ch, color: a };
-    const t = i / (chars.length - 1);
-    const ca = hexToRgb(a);
-    const cb = hexToRgb(b);
-    return { ch, color: rgbToHex(ca.map((v, k) => v + (cb[k] - v) * t)) };
-  });
-}
-
-export function PrefixPreview({ text, colors, name }: { text: string; colors: string[]; name?: string }) {
-  if (!text) return null;
-  return (
-    <span className="font-mono text-body">
-      {prefixLetters(text, colors).map((l, i) => (
-        <span key={i} style={{ color: l.color }}>
-          {l.ch}
-        </span>
-      ))}
-      {name !== undefined && <span className="text-muted"> {name}</span>}
-    </span>
-  );
-}
-
-type ColorMode = "default" | "solid" | "gradient";
-
-function PrefixFields({ name, style, onChange }: { name: string; style: BadgeStyle; onChange: (s: BadgeStyle) => void }) {
-  const mode: ColorMode = style.color2 ? "gradient" : style.color1 ? "solid" : "default";
-  const setMode = (m: ColorMode) =>
-    onChange({
-      ...style,
-      color1: m === "default" ? "" : style.color1 || "#fdac0d",
-      color2: m === "gradient" ? style.color2 || "#ff3b1f" : "",
-    });
-  const shownText = style.prefix.trim() || name.trim();
-  const colors = [style.color1, style.color2].filter(Boolean);
-  return (
-    <Stack gap={2}>
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-        <label className="flex flex-col gap-1">
-          <Caption>Name prefix</Caption>
-          <Input
-            value={style.prefix}
-            maxLength={16}
-            onChange={(e) => onChange({ ...style, prefix: e.target.value })}
-            placeholder={name.trim() ? `Empty = "${name.trim()}"` : "Empty = the badge name"}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <Caption>Prefix color</Caption>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as ColorMode)}
-            className="h-9 cursor-pointer rounded-control bg-surface-2 px-3 text-body text-fg outline-none focus-visible:outline-2 focus-visible:outline-primary-400"
-          >
-            <option value="default">Default</option>
-            <option value="solid">Solid</option>
-            <option value="gradient">Gradient</option>
-          </select>
-        </label>
-      </div>
-      {mode !== "default" && (
-        <Stack direction="row" align="center" gap={3}>
-          <input
-            type="color"
-            aria-label="Prefix color"
-            value={style.color1 || "#fdac0d"}
-            onChange={(e) => onChange({ ...style, color1: e.target.value })}
-            className="h-8 w-12 cursor-pointer rounded-control bg-transparent"
-          />
-          {mode === "gradient" && (
-            <input
-              type="color"
-              aria-label="Gradient end color"
-              value={style.color2 || "#ff3b1f"}
-              onChange={(e) => onChange({ ...style, color2: e.target.value })}
-              className="h-8 w-12 cursor-pointer rounded-control bg-transparent"
-            />
-          )}
-        </Stack>
-      )}
-      {shownText && (
-        <Caption>
-          In chat: <PrefixPreview text={shownText} colors={colors} name="PlayerName" />
-        </Caption>
-      )}
-    </Stack>
-  );
-}
-
 const styleOf = (b?: BadgeDef): BadgeStyle => ({ prefix: b?.prefix ?? "", color1: b?.color1 ?? "", color2: b?.color2 ?? "" });
 
 function CreateBadge({ pw }: { pw: string }) {
@@ -247,7 +148,7 @@ function CreateBadge({ pw }: { pw: string }) {
             <Input value={description} maxLength={200} onChange={(e) => setDescription(e.target.value)} placeholder="Shown when hovering the badge" />
           </label>
         </div>
-        <PrefixFields name={name} style={style} onChange={setStyle} />
+        <PrefixFields defaultText={name} style={style} onChange={setStyle} />
         {create.error && (
           <Text variant="caption" tone="danger" role="alert">
             {errText(create.error)}
@@ -331,7 +232,7 @@ function BadgeCard({ pw, badge, players }: { pw: string; badge: BadgeDef; player
             <Caption>Description</Caption>
             <Input value={description} maxLength={200} onChange={(e) => setDescription(e.target.value)} />
           </label>
-          <PrefixFields name={name} style={style} onChange={setStyle} />
+          <PrefixFields defaultText={name} style={style} onChange={setStyle} />
           <Stack direction="row" gap={2}>
             <Button type="submit" variant="primary" size="sm" disabled={save.isPending || !name.trim()}>
               {save.isPending ? "Saving…" : "Save"}
@@ -505,31 +406,25 @@ export function PlayerBadgeEditor({ pw, player }: { pw: string; player: AdminPla
         <Caption>No badges.</Caption>
       )}
       {available.length > 0 && (
-        <form
-          className="flex flex-wrap items-center gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (pick) grant.mutate(Number(pick));
+        <Select
+          value={pick}
+          disabled={grant.isPending}
+          onValueChange={(v) => {
+            setPick(v);
+            grant.mutate(Number(v));
           }}
         >
-          <select
-            value={pick}
-            onChange={(e) => setPick(e.target.value)}
-            aria-label={`Badge to give ${player.name}`}
-            className="h-8 cursor-pointer rounded-pill bg-surface px-3 text-body text-fg outline-none focus-visible:outline-2 focus-visible:outline-primary-400"
-          >
-            <option value="">Choose a badge…</option>
+          <SelectTrigger aria-label={`Badge to give ${player.name}`} className="w-56">
+            <SelectValue placeholder="Give a badge…" />
+          </SelectTrigger>
+          <SelectContent>
             {available.map((b) => (
-              <option key={b.id} value={b.id}>
+              <SelectItem key={b.id} value={String(b.id)}>
                 {b.name}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-          <Button type="submit" size="sm" disabled={!pick || grant.isPending}>
-            <Plus aria-hidden />
-            Give
-          </Button>
-        </form>
+          </SelectContent>
+        </Select>
       )}
       {err && (
         <Text variant="caption" tone="danger" role="alert">

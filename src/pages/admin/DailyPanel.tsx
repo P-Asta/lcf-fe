@@ -7,13 +7,12 @@ import { Panel, Section } from "@/components/layout/Section";
 import { Caption, Text } from "@/components/typography/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { OptionSelect } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminApi, type DailyAdminResponse, type DailySettings } from "@/lib/api";
 import { eventKindLabel, eventLabel, fmtCountdown, fmtMoney, toolLabel } from "@/lib/format";
 
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
-const selectCls =
-  "h-9 cursor-pointer rounded-pill bg-surface-2 px-4 text-body text-fg outline-none hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-primary-400";
 
 const DETAILS: Record<string, [string, string][]> = {
   weather: [
@@ -72,16 +71,10 @@ function Editor({ pw, data }: { pw: string; data: DailyAdminResponse }) {
       </Stack>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <Caption>Moon</Caption>
-          <select className={selectCls} value={draft.moon} onChange={(e) => setDraft({ ...draft, moon: e.target.value })}>
-            {data.moons.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </label>
+          <OptionSelect label="Moon" value={draft.moon} onChange={(v) => setDraft({ ...draft, moon: v })} options={data.moons.map((m) => ({ value: m, label: m }))} />
+        </div>
         <label className="flex flex-col gap-1">
           <Caption>Seed</Caption>
           <Input type="number" min={1} value={draft.seed} onChange={(e) => setDraft({ ...draft, seed: Number(e.target.value) || 1 })} />
@@ -92,26 +85,21 @@ function Editor({ pw, data }: { pw: string; data: DailyAdminResponse }) {
         <Caption>Events (0 to 3)</Caption>
         {draft.events.map((e, i) => (
           <Stack key={i} direction="row" align="center" gap={2} wrap>
-            <select aria-label={`Event ${i + 1}`} className={selectCls} value={e.kind} onChange={(ev) => setEvent(i, ev.target.value)}>
-              {data.event_kinds.map((k) => (
-                <option key={k} value={k}>
-                  {eventKindLabel(k)}
-                </option>
-              ))}
-            </select>
+            <OptionSelect
+              label={`Event ${i + 1}`}
+              className="w-56"
+              value={e.kind}
+              onChange={(v) => setEvent(i, v)}
+              options={data.event_kinds.map((k) => ({ value: k, label: eventKindLabel(k) }))}
+            />
             {DETAILS[e.kind] && (
-              <select
-                aria-label={`Event ${i + 1} detail`}
-                className={selectCls}
+              <OptionSelect
+                label={`Event ${i + 1} detail`}
+                className="w-44"
                 value={e.detail ?? ""}
-                onChange={(ev) => setEvent(i, e.kind, ev.target.value || null)}
-              >
-                {DETAILS[e.kind].map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setEvent(i, e.kind, v || null)}
+                options={DETAILS[e.kind].map(([v, l]) => ({ value: v, label: l }))}
+              />
             )}
             <Button
               variant="ghost"
@@ -140,13 +128,14 @@ function Editor({ pw, data }: { pw: string; data: DailyAdminResponse }) {
         <Caption>Banned tools</Caption>
         <Stack direction="row" gap={2} wrap>
           {draft.banned.map((b, i) => (
-            <select key={i} aria-label={`Banned tool ${i + 1}`} className={selectCls} value={b} onChange={(e) => setBan(i, e.target.value)}>
-              {data.tools.map((t) => (
-                <option key={t} value={t}>
-                  {toolLabel(t)}
-                </option>
-              ))}
-            </select>
+            <OptionSelect
+              key={i}
+              label={`Banned tool ${i + 1}`}
+              className="w-48"
+              value={b}
+              onChange={(v) => setBan(i, v)}
+              options={data.tools.map((t) => ({ value: t, label: toolLabel(t) }))}
+            />
           ))}
         </Stack>
       </Stack>

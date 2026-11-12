@@ -8,14 +8,13 @@ import { Caption, Text } from "@/components/typography/Text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { OptionSelect } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminApi, type EventConfig, type ServerResponse } from "@/lib/api";
 import { OddsEditor } from "@/pages/admin/OddsEditor";
 import { eventKindLabel } from "@/lib/format";
 
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
-const selectCls =
-  "h-9 cursor-pointer rounded-pill bg-surface-2 px-4 text-body text-fg outline-none hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-primary-400";
 
 const DETAILS: Record<string, [string, string][]> = {
   weather: [
@@ -156,52 +155,45 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
             moon&apos;s scrap back to the ship wins.
           </Caption>
         </Stack>
-        <select
-          aria-label="Quick play preset"
+        <OptionSelect
+          label="Quick play preset"
+          className="w-72"
           value={ev.quick_preset ?? "default"}
           disabled={save.isPending}
-          onChange={(e) => set({ quick_preset: e.target.value })}
-          className={selectCls}
-        >
-          <option value="default">Default (ranked rules)</option>
-          <option value="hunter">Monster hunter</option>
-          <option value="speedrun">Speedrun (20%)</option>
-        </select>
+          onChange={(v) => set({ quick_preset: v })}
+          options={[
+            { value: "default", label: "Default (ranked rules)" },
+            { value: "hunter", label: "Monster hunter" },
+            { value: "speedrun", label: "Speedrun (20%)" },
+          ]}
+        />
         <Stack gap={1}>
           <Text variant="title">Quick play event</Text>
           <Caption>Quick play is unrated, so it can use events ranked does not: every event (hidden ones too), the ranked rules, none, or one fixed event.</Caption>
         </Stack>
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            aria-label="Quick play event"
+          <OptionSelect
+            label="Quick play event"
+            className="w-80"
             value={ev.quick_event}
             disabled={save.isPending}
-            onChange={(e) => set({ quick_event: e.target.value, quick_detail: null })}
-            className={selectCls}
-          >
-            <option value="roll_all">Random - every event, hidden ones too</option>
-            <option value="roll">Random - like ranked (no hidden events)</option>
-            <option value="none">No event</option>
-            {data.event_kinds.map((k) => (
-              <option key={k} value={k}>
-                Always: {eventKindLabel(k)}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => set({ quick_event: v, quick_detail: null })}
+            options={[
+              { value: "roll_all", label: "Random - every event, hidden ones too" },
+              { value: "roll", label: "Random - like ranked (no hidden events)" },
+              { value: "none", label: "No event" },
+              ...data.event_kinds.map((k) => ({ value: k, label: `Always: ${eventKindLabel(k)}` })),
+            ]}
+          />
           {details && (
-            <select
-              aria-label="Quick play event detail"
+            <OptionSelect
+              label="Quick play event detail"
+              className="w-44"
               value={ev.quick_detail ?? ""}
               disabled={save.isPending}
-              onChange={(e) => set({ quick_detail: e.target.value || null })}
-              className={selectCls}
-            >
-              {details.map(([v, l]) => (
-                <option key={v} value={v}>
-                  {l}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => set({ quick_detail: v || null })}
+              options={details.map(([v, l]) => ({ value: v, label: l }))}
+            />
           )}
         </div>
         {save.error && (

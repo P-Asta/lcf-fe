@@ -8,12 +8,13 @@ import { RankBadge } from "@/components/RankBadge";
 import { SearchField } from "@/components/SearchField";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { EmptyState, ErrorState } from "@/components/StateBlock";
-import { Caption, Text } from "@/components/typography/Text";
+import { Caption } from "@/components/typography/Text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Stack } from "@/components/layout/Stack";
 import { useLeaderboard } from "@/hooks/queries";
 import type { LeaderboardEntry } from "@/lib/api";
 import { fmtPct, fmtTr } from "@/lib/format";
+import { PageTitle } from "@/components/motion/PageTitle";
 
 type SortKey = "tr" | "wins" | "winrate" | "games";
 
@@ -52,9 +53,7 @@ export function LeaderboardPage() {
   return (
     <Stack gap={8}>
       <Stack gap={1}>
-        <Text variant="headline" as="h1">
-          League
-        </Text>
+        <PageTitle text="League" />
         <Caption className="text-body">The ranked ladder: TR from rated 1v1 matches.</Caption>
       </Stack>
       <Stack direction="row" align="center" justify="between" gap={4} wrap>

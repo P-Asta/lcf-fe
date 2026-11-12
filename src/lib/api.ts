@@ -45,7 +45,15 @@ export type RankIcon = {
   /** Square PNG (what the mod shows), server path. */
   png: string;
   custom: boolean;
+  prefix: string;
+  color1: string;
+  color2: string;
+  players: number;
+  min_tr: number | null;
+  max_tr: number | null;
 };
+
+export type RanksResponse = { ranks: RankIcon[]; ranked_total?: number };
 
 export type MatchSide = {
   steam_id: string;
@@ -134,6 +142,9 @@ export type MoonsResponse = { moons: MoonBoard[] };
 
 export type StatsResponse = {
   online: number;
+  visits?: number;
+  rooms?: number;
+  matches?: number;
   ranked: { searching: number; playing: number };
 };
 
@@ -243,7 +254,7 @@ export type ServerResponse = {
   event_kinds: string[];
   /** Seconds until the scheduled shutdown. */
   shutdown_in: number | null;
-  stats: { online: number; rooms: number; matches: number; ranked: { searching: number; playing: number }; quick: { searching: number } };
+  stats: { online: number; visits?: number; rooms: number; matches: number; ranked: { searching: number; playing: number }; quick: { searching: number } };
 };
 
 export class ApiError extends Error {
@@ -320,6 +331,7 @@ export const adminApi = {
     return res.json() as Promise<{ ranks: RankIcon[] }>;
   },
   resetRankIcon: (pw: string, id: string) => adminFetch<{ ranks: RankIcon[] }>(pw, `/api/admin/ranks/${id}/reset`, {}),
+  setRankStyle: (pw: string, id: string, style: BadgeStyle) => adminFetch<{ ranks: RankIcon[] }>(pw, `/api/admin/ranks/${id}/style`, style),
   deleteBadge: (pw: string, id: number) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/delete`, {}),
   grantBadge: (pw: string, id: number, steamId: string) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/grant`, { steam_id: steamId }),
   revokeBadge: (pw: string, id: number, steamId: string) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/revoke`, { steam_id: steamId }),
@@ -329,7 +341,12 @@ export const api = {
   leaderboard: () => get<LeaderboardResponse>("/api/leaderboard?limit=1000"),
   players: () => get<PlayerListResponse>("/api/players"),
   badges: () => get<{ badges: BadgeDef[] }>("/api/badges"),
-  ranks: () => get<{ ranks: RankIcon[] }>("/api/ranks"),
+  ranks: () => get<RanksResponse>("/api/ranks"),
+  visit: async () => {
+    const res = await fetch(`${BASE}/api/visit`, { method: "POST" });
+    if (!res.ok) throw new ApiError(res.status, (await res.text()) || res.statusText);
+    return res.json() as Promise<{ visits: number; counted: boolean }>;
+  },
   daily: (day?: string) => get<DailyResponse>(day ? `/api/daily?day=${encodeURIComponent(day)}` : "/api/daily"),
   player: (steamId: string) => get<PlayerResponse>(`/api/player/${encodeURIComponent(steamId)}`),
   moons: () => get<MoonsResponse>("/api/moons"),

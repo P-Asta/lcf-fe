@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 export const textVariants = cva("", {
   variants: {
     variant: {
+      hero: "text-hero",
       display: "text-display",
       headline: "text-headline",
       stat: "text-stat tabular-nums",

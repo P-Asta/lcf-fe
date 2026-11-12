@@ -4,6 +4,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AdminPage } from "@/pages/AdminPage";
 import { DailyPage } from "@/pages/DailyPage";
+import { LandingPage } from "@/pages/LandingPage";
 import { LeaderboardPage } from "@/pages/LeaderboardPage";
 import { MoonsPage } from "@/pages/MoonsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -21,7 +22,8 @@ export function App() {
         <BrowserRouter>
           <PageShell>
             <Routes>
-              <Route path="/" element={<LeaderboardPage />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/league" element={<LeaderboardPage />} />
               <Route path="/daily" element={<DailyPage />} />
               <Route path="/moons" element={<MoonsPage />} />
               <Route path="/players" element={<PlayersPage />} />
