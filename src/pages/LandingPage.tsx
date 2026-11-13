@@ -18,7 +18,7 @@ import { fmtInt } from "@/lib/format";
 
 function LiveStat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: number | undefined }) {
   return (
-    <div className="flex h-16 min-w-44 items-center gap-3 rounded-card bg-surface px-4 text-fg">
+    <div className="flex h-16 min-w-0 flex-1 items-center gap-3 rounded-card bg-surface px-4 text-fg sm:min-w-44 sm:flex-none">
       <Icon aria-hidden className="size-5 shrink-0 text-primary-300" />
       <div className="flex flex-col">
         {value === undefined ? (
@@ -43,7 +43,7 @@ function Hero() {
   return (
     <section className="relative isolate overflow-hidden">
       <VeilBackdrop className="-z-10" />
-      <Container className="flex min-h-[36rem] flex-col justify-center gap-6 py-24">
+      <Container className="flex min-h-[30rem] flex-col justify-center gap-6 py-16 sm:min-h-[36rem] sm:py-24">
         <BlurText text="LCF" animateBy="letters" trigger="load" delay={120} className="text-hero text-fg" />
         <Stack gap={2} className="max-w-xl">
           <Text variant="headline">
@@ -51,7 +51,7 @@ function Hero() {
           </Text>
           <Text tone="muted">Ranked 1v1 on the same seed, a daily race for everyone, custom rooms for up to 28 players and spectating from inside their game.</Text>
         </Stack>
-        <Stack direction="row" gap={2} wrap>
+        <Stack direction="row" gap={2} wrap className="*:flex-1 sm:*:flex-none">
           <Button asChild variant="primary">
             <Link to="/league">
               <Swords aria-hidden />
@@ -83,7 +83,7 @@ const FEATURES: { icon: LucideIcon; title: string; body: string; to: string; cta
 
 function Feature({ icon: Icon, title, body, to, cta }: (typeof FEATURES)[number]) {
   return (
-    <SpotlightPanel className="flex flex-col gap-3 p-6">
+    <SpotlightPanel className="flex flex-col gap-3 p-5 sm:p-6">
       <Icon aria-hidden className="size-6 text-primary-300" />
       <Text variant="title">{title}</Text>
       <Caption className="text-body">{body}</Caption>
@@ -95,7 +95,7 @@ function Feature({ icon: Icon, title, body, to, cta }: (typeof FEATURES)[number]
 }
 
 function Block({ children }: { children: ReactNode }) {
-  return <Container className="flex flex-col gap-12 py-16">{children}</Container>;
+  return <Container className="flex flex-col gap-10 py-12 sm:gap-12 sm:py-16">{children}</Container>;
 }
 
 export function LandingPage() {
@@ -114,9 +114,24 @@ export function LandingPage() {
           <Caption className="text-body">Ranks follow your place on the ladder, so the TR each one takes moves as people play.</Caption>
           <RankLadder />
         </Section>
-        <Section title="Chat with a badge" aside="Try it">
-          <Panel className="p-6">
+        <Section title="Jump in" aside="Ranked, daily race and custom rooms">
+          <Panel className="flex flex-col gap-4 p-4 sm:p-6">
+            <Caption className="text-body">Queue up, race the daily seed or open a room with friends. Your rank badge shows up in chat.</Caption>
             <ChatDemo />
+            <Stack direction="row" gap={2} wrap className="*:flex-1 sm:*:flex-none">
+              <Button asChild variant="primary">
+                <Link to="/daily">
+                  <CalendarClock aria-hidden />
+                  Play today&apos;s race
+                </Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link to="/league">
+                  <Swords aria-hidden />
+                  See the ladder
+                </Link>
+              </Button>
+            </Stack>
           </Panel>
         </Section>
       </Block>

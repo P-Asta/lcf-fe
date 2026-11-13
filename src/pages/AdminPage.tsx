@@ -234,15 +234,17 @@ function PlayerTable({ pw, players }: { pw: string; players: AdminPlayer[] }) {
       {list.length === 0 ? (
         <EmptyState icon={Users} title="No players match" />
       ) : (
-        <Table>
+        <Table className="min-w-0 md:min-w-xl">
           <THead>
             <tr>
               <TH className="w-8" />
               <TH>Player</TH>
-              <TH>Rank</TH>
+              <TH className="hidden sm:table-cell">Rank</TH>
               <TH align="right">TR</TH>
-              <TH align="right">W / G</TH>
-              <TH>Last login</TH>
+              <TH align="right" className="hidden sm:table-cell">
+                W / G
+              </TH>
+              <TH className="hidden md:table-cell">Last login</TH>
               <TH>Status</TH>
             </tr>
           </THead>
@@ -262,29 +264,29 @@ function PlayerTable({ pw, players }: { pw: string; players: AdminPlayer[] }) {
                         {expanded ? <ChevronDown aria-hidden className="size-4" /> : <ChevronRight aria-hidden className="size-4" />}
                       </button>
                     </TD>
-                    <TD>
+                    <TD className="max-w-40 sm:max-w-none">
                       <span className="flex min-w-0 items-center gap-2">
                         <Avatar src={p.avatar} name={p.name} size="sm" />
                         <span className="truncate">{p.name}</span>
                       </span>
                     </TD>
-                    <TD>
+                    <TD className="hidden sm:table-cell">
                       <RankBadge rank={p.rank} />
                     </TD>
                     <TD align="right" className="tabular-nums">
                       {fmtTr(p.tr)}
                     </TD>
-                    <TD align="right" className="tabular-nums">
+                    <TD align="right" className="hidden tabular-nums sm:table-cell">
                       {p.wins} / {p.games}
                     </TD>
-                    <TD className="text-muted">{fmtWhen(p.last_login)}</TD>
+                    <TD className="hidden text-muted md:table-cell">{fmtWhen(p.last_login)}</TD>
                     <TD>
                       {p.banned ? <Badge tone="danger">Banned</Badge> : p.online ? <Badge tone="accent">Online</Badge> : <Badge>Offline</Badge>}
                     </TD>
                   </TR>
                   {expanded && (
                     <tr>
-                      <td colSpan={7} className="px-2 pb-3">
+                      <td colSpan={7} className="px-0 pb-3 sm:px-2">
                         <PlayerDetail pw={pw} p={p} />
                       </td>
                     </tr>
@@ -316,9 +318,9 @@ function PlayerDetail({ pw, p }: { pw: string; p: AdminPlayer }) {
   const err = ban.error ?? unban.error;
 
   return (
-    <div className="grid gap-4 rounded-card bg-surface-2 p-4 lg:grid-cols-2">
+    <div className="grid min-w-0 gap-4 rounded-card bg-surface-2 p-3 sm:p-4 lg:grid-cols-2">
       <Stack gap={3}>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-body">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-body break-words">
           <dt className="text-muted">Steam ID</dt>
           <dd className="flex flex-wrap gap-x-3 tabular-nums">
             {p.steam_id}
@@ -364,11 +366,11 @@ function PlayerDetail({ pw, p }: { pw: string; p: AdminPlayer }) {
               if (window.confirm(`Ban ${p.name}${Number(days) ? ` for ${days} day(s)` : " permanently"}? They are kicked right away.`)) ban.mutate();
             }}
           >
-            <div className="flex flex-col gap-1">
+            <div className="flex w-full flex-col gap-1 sm:w-auto">
               <Caption>Length</Caption>
               <OptionSelect
                 label="Ban length"
-                className="w-36"
+                className="w-full sm:w-36"
                 value={days}
                 onChange={setDays}
                 options={[
@@ -383,7 +385,7 @@ function PlayerDetail({ pw, p }: { pw: string; p: AdminPlayer }) {
               <Caption>Reason</Caption>
               <Input value={reason} maxLength={200} onChange={(e) => setReason(e.target.value)} placeholder="Shown to the player" />
             </label>
-            <Button type="submit" variant="primary" className="bg-danger hover:bg-danger/80" disabled={ban.isPending}>
+            <Button type="submit" variant="primary" className="w-full bg-danger hover:bg-danger/80 sm:w-auto" disabled={ban.isPending}>
               <ShieldAlert aria-hidden />
               {ban.isPending ? "Banning…" : "Ban"}
             </Button>

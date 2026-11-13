@@ -43,7 +43,7 @@ export function PlayerPage() {
   if (isPending || !data || !stats) return <PlayerSkeleton />;
 
   return (
-    <Stack gap={12}>
+    <Stack gap={8} className="sm:gap-12">
       <PlayerHeader data={data} />
       <RatingCards data={data} stats={stats} />
       <MoonPanel stats={stats} />
@@ -59,8 +59,8 @@ export function PlayerPage() {
 function PlayerHeader({ data }: { data: PlayerResponse }) {
   const p = data.profile;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-6">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center justify-between gap-4 sm:gap-6">
+      <div className="flex min-w-0 items-center gap-4">
         {data.avatar ? (
           <TiltedCard
             imageSrc={data.avatar}
@@ -81,7 +81,7 @@ function PlayerHeader({ data }: { data: PlayerResponse }) {
         )}
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
-            <PageTitle text={p.name} className="truncate" />
+            <PageTitle text={p.name} className="max-w-full truncate" />
             <WornBadges ids={p.worn} size="md" />
             <RankBadge rank={p.rank} size="md" />
             <Badge>{fmtTr(p.tr)} TR</Badge>
@@ -154,8 +154,10 @@ function MoonPanel({ stats }: { stats: PlayerStats }) {
       {stats.moons.length === 0 ? (
         <EmptyState title="No moons played yet">Moon win rates appear after the first finished match.</EmptyState>
       ) : (
-        <Panel className="grid items-center gap-6 p-6 md:grid-cols-[18rem_1fr]">
-          <MoonRadar moons={stats.moons} />
+        <Panel className="grid items-center gap-6 p-4 sm:p-6 md:grid-cols-[18rem_1fr]">
+          <div className="mx-auto w-full max-w-72">
+            <MoonRadar moons={stats.moons} />
+          </div>
           <Table className="min-w-0">
             <THead>
               <tr>
@@ -193,7 +195,7 @@ function BestRecords({ stats }: { stats: PlayerStats }) {
   const w = stats.biggestWin;
   return (
     <Section title="Best records">
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
         <StatCard
           label="Highest ship value"
           value={b ? fmtMoney(b.value) : "-"}
@@ -237,10 +239,10 @@ function DeathCauses({ data }: { data: PlayerResponse }) {
   const max = Math.max(...list.map((d) => d.count));
   return (
     <Section title="Causes of death" aside={`${total} ${total === 1 ? "death" : "deaths"}`}>
-      <Panel className="p-5">
+      <Panel className="p-4 sm:p-5">
         <ul className="flex flex-col gap-3">
           {list.map((d) => (
-            <li key={d.cause ?? "unknown"} className="grid grid-cols-[9rem_1fr_3.5rem] items-center gap-3 text-body">
+            <li key={d.cause ?? "unknown"} className="grid grid-cols-[6.5rem_1fr_auto] items-center gap-3 text-body sm:grid-cols-[9rem_1fr_4.5rem]">
               <span className={cn("truncate", d.cause ? "text-fg" : "text-muted")}>{deathLabel(d.cause)}</span>
               <span className="h-2 overflow-hidden rounded-pill bg-surface-3" aria-hidden>
                 <span className="block h-full rounded-pill bg-danger" style={{ width: `${(d.count / max) * 100}%` }} />
@@ -261,7 +263,7 @@ function Achievements({ data, stats }: { data: PlayerResponse; stats: PlayerStat
   const done = list.filter((a) => a.unlocked).length;
   return (
     <Section title="Achievements" aside={`${done} of ${list.length}`}>
-      <Panel className="flex flex-col gap-6 p-5">
+      <Panel className="flex flex-col gap-6 p-4 sm:p-5">
         <div
           role="progressbar"
           aria-label="Achievements unlocked"
@@ -272,7 +274,7 @@ function Achievements({ data, stats }: { data: PlayerResponse; stats: PlayerStat
         >
           <div className="h-full bg-primary-500 transition-[width] duration-500" style={{ width: `${(done / list.length) * 100}%` }} />
         </div>
-        <ul className="grid grid-cols-3 gap-y-6 sm:grid-cols-5 lg:grid-cols-7">
+        <ul className="grid grid-cols-3 gap-y-6 min-[480px]:grid-cols-4 sm:grid-cols-5 lg:grid-cols-7">
           {list.map((a) => (
             <li key={a.id}>
               <Tooltip>
@@ -318,38 +320,40 @@ function RecentMatches({ stats }: { stats: PlayerStats }) {
   const rows = stats.history.slice(0, shown);
   return (
     <Section title="Recent matches" aside={`${stats.history.length} total`}>
-      <Table>
+      <Table className="min-w-0 md:min-w-xl">
         <THead>
           <tr>
             <TH>Result</TH>
             <TH>Opponent</TH>
-            <TH>Mode</TH>
-            <TH>Moon</TH>
-            <TH>Events</TH>
+            <TH className="hidden md:table-cell">Mode</TH>
+            <TH className="hidden sm:table-cell">Moon</TH>
+            <TH className="hidden lg:table-cell">Events</TH>
             <TH align="right">Ship value</TH>
             <TH align="right">TR</TH>
-            <TH align="right">Date</TH>
+            <TH align="right" className="hidden md:table-cell">
+              Date
+            </TH>
           </tr>
         </THead>
         <TBody>
           {rows.map((pm) => (
             <TR key={pm.match.id} interactive>
-              <TD className={cn("w-20 font-semibold", OUTCOME[pm.outcome].className)}>{OUTCOME[pm.outcome].label}</TD>
-              <TD className="min-w-40">
-                <PlayerLink player={pm.opp} />
+              <TD className={cn("w-14 font-semibold sm:w-20", OUTCOME[pm.outcome].className)}>{OUTCOME[pm.outcome].label}</TD>
+              <TD className="max-w-36 sm:max-w-none sm:min-w-40">
+                <PlayerLink player={pm.opp} className="max-w-full" />
               </TD>
-              <TD className="text-muted">{kindLabel(pm.match.kind)}</TD>
-              <TD>{pm.match.moon}</TD>
-              <TD className="max-w-48 text-muted">
+              <TD className="hidden text-muted md:table-cell">{kindLabel(pm.match.kind)}</TD>
+              <TD className="hidden sm:table-cell">{pm.match.moon}</TD>
+              <TD className="hidden max-w-48 text-muted lg:table-cell">
                 <EventsCell match={pm.match} />
               </TD>
-              <TD align="right" className="tabular-nums">
-                {fmtMoney(pm.me.score)} <span className="text-muted">/ {fmtMoney(pm.opp.score)}</span>
+              <TD align="right" className="whitespace-nowrap tabular-nums">
+                {fmtMoney(pm.me.score)} <span className="hidden text-muted min-[480px]:inline">/ {fmtMoney(pm.opp.score)}</span>
               </TD>
               <TD align="right" className={cn("tabular-nums", pm.trDelta == null ? "text-muted" : pm.trDelta >= 0 ? "text-primary-300" : "text-danger")}>
                 {pm.trDelta == null ? "-" : fmtSigned(pm.trDelta)}
               </TD>
-              <TD align="right" className="text-muted tabular-nums">
+              <TD align="right" className="hidden text-muted tabular-nums md:table-cell">
                 {fmtDate(pm.match.created)}
               </TD>
             </TR>
@@ -369,7 +373,7 @@ function RecentMatches({ stats }: { stats: PlayerStats }) {
 
 function PlayerSkeleton() {
   return (
-    <Stack gap={12} aria-busy>
+    <Stack gap={8} aria-busy className="sm:gap-12">
       <div className="flex items-center gap-4">
         <Skeleton className="size-18 rounded-card" />
         <div className="flex flex-col gap-2">
@@ -386,7 +390,7 @@ function PlayerSkeleton() {
         <StatCardSkeleton />
       </div>
       <Skeleton className="h-80 rounded-card" />
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
         <StatCardSkeleton />
         <StatCardSkeleton />
         <StatCardSkeleton />

@@ -414,7 +414,7 @@ export function PlayerBadgeEditor({ pw, player }: { pw: string; player: AdminPla
             grant.mutate(Number(v));
           }}
         >
-          <SelectTrigger aria-label={`Badge to give ${player.name}`} className="w-56">
+          <SelectTrigger aria-label={`Badge to give ${player.name}`} className="w-full sm:w-56">
             <SelectValue placeholder="Give a badge…" />
           </SelectTrigger>
           <SelectContent>

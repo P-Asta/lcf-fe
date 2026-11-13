@@ -8,14 +8,16 @@ import { EmptyState, ErrorState } from "@/components/StateBlock";
 import { StatCard, StatCardSkeleton } from "@/components/StatCard";
 import { Stack } from "@/components/layout/Stack";
 import { Section } from "@/components/layout/Section";
-import { Caption } from "@/components/typography/Text";
+import { Caption, Text } from "@/components/typography/Text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { OptionSelect } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDaily } from "@/hooks/queries";
 import type { DailyRow } from "@/lib/api";
-import { eventLabel, fmtCountdown, fmtMoney, toolLabel } from "@/lib/format";
+import { eventLabel, fmtCountdown, fmtMoney } from "@/lib/format";
+import { BannedTools } from "@/components/ToolIcon";
+import { SpotlightPanel } from "@/components/motion/SpotlightPanel";
 import { PageTitle } from "@/components/motion/PageTitle";
 import SplitFlapText from "@/components/reactbits/SplitFlapText";
 
@@ -37,10 +39,10 @@ function useCountdown(seconds: number | undefined, at: number) {
 function BoardTable({ rows, live }: { rows: DailyRow[]; live: boolean }) {
   if (rows.length === 0) return <EmptyState icon={Trophy} title={live ? "No runs yet today" : "Nobody ran this challenge"} />;
   return (
-    <Table>
+    <Table className="min-w-0">
       <THead>
         <tr>
-          <TH>#</TH>
+          <TH className="w-12 sm:w-16">#</TH>
           <TH>Player</TH>
           <TH align="right">Ship value</TH>
         </tr>
@@ -89,13 +91,13 @@ export function DailyPage() {
           <PageTitle text="Daily race" />
           <Caption className="text-body">Everyone runs the same moon, seed, events and tool bans, solo. A new race starts every day at 00:00 UTC.</Caption>
         </Stack>
-        <Stack direction="row" align="center" gap={2}>
+        <Stack direction="row" align="center" gap={2} className="w-full sm:w-auto">
           <Button variant="secondary" size="icon" aria-label="Previous day" disabled={index < 0 || index >= days.length - 1} onClick={() => go(days[index + 1]?.day)}>
             <ChevronLeft aria-hidden />
           </Button>
           <OptionSelect
             label="Race day"
-            className="w-64 tabular-nums"
+            className="min-w-0 flex-1 tabular-nums sm:w-64 sm:flex-none"
             value={data?.day ?? ""}
             onChange={go}
             disabled={days.length === 0}
@@ -128,7 +130,7 @@ export function DailyPage() {
                 flipsPerChar={3}
                 flipDuration={0.08}
                 stagger={0.02}
-                fontSize={20}
+                fontSize={18}
                 gap={3}
                 tileRadius={4}
                 tileColor="#1f0f10"
@@ -148,21 +150,30 @@ export function DailyPage() {
       )}
 
       {isPending || !s ? (
-        <div className="grid gap-3 md:grid-cols-4">
-          {Array.from({ length: 4 }, (_, i) => (
-            <StatCardSkeleton key={i} />
-          ))}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+          <StatCardSkeleton className="sm:col-span-2" />
         </div>
       ) : (
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard tone="highlight" label="Moon" value={s.moon} sub={`Seed ${s.seed}`} />
           <StatCard
             label="Events"
             value={s.events.length === 0 ? "None" : s.events.length}
             sub={s.events.length === 0 ? "Standard rules" : s.events.map(eventLabel).join(" · ")}
-            className="md:col-span-2"
           />
-          <StatCard label="Banned tools" value={s.banned.length} sub={s.banned.map(toolLabel).join(" · ")} />
+          <SpotlightPanel className="flex min-h-28 flex-col gap-3 p-4 sm:col-span-2 sm:p-5">
+            <Stack direction="row" align="baseline" justify="between" gap={2}>
+              <Text variant="label" tone="muted">
+                Banned tools
+              </Text>
+              <Text variant="caption" tone="muted" className="tabular-nums">
+                {s.banned.length === 0 ? "None" : `${s.banned.length} banned`}
+              </Text>
+            </Stack>
+            <BannedTools tools={s.banned} />
+          </SpotlightPanel>
         </div>
       )}
 

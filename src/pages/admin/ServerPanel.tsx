@@ -157,7 +157,7 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
         </Stack>
         <OptionSelect
           label="Quick play preset"
-          className="w-72"
+          className="w-full sm:w-72"
           value={ev.quick_preset ?? "default"}
           disabled={save.isPending}
           onChange={(v) => set({ quick_preset: v })}
@@ -174,7 +174,7 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
         <div className="flex flex-wrap items-center gap-3">
           <OptionSelect
             label="Quick play event"
-            className="w-80"
+            className="w-full sm:w-80"
             value={ev.quick_event}
             disabled={save.isPending}
             onChange={(v) => set({ quick_event: v, quick_detail: null })}
@@ -188,7 +188,7 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
           {details && (
             <OptionSelect
               label="Quick play event detail"
-              className="w-44"
+              className="w-full sm:w-44"
               value={ev.quick_detail ?? ""}
               disabled={save.isPending}
               onChange={(v) => set({ quick_detail: v || null })}

@@ -7,7 +7,7 @@ type SectionProps = ComponentProps<"section"> & { title: string; aside?: ReactNo
 export function Section({ title, aside, className, children, ...props }: SectionProps) {
   return (
     <section className={cn("flex flex-col gap-3", className)} {...props}>
-      <div className="flex items-baseline justify-between gap-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <Title>{title}</Title>
         {aside != null && <Caption className="text-body">{aside}</Caption>}
       </div>

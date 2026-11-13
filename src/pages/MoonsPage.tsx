@@ -13,6 +13,7 @@ import { Stack } from "@/components/layout/Stack";
 import { useMoons } from "@/hooks/queries";
 import type { MoonLeader } from "@/lib/api";
 import { fmtDate, fmtMoney } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 type SortKey = "best" | "total";
 
@@ -80,7 +81,7 @@ export function MoonsPage() {
         />
       )}
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
         {isPending || !board ? (
           <>
             <StatCardSkeleton />
@@ -142,15 +143,21 @@ export function MoonsPage() {
               Try a shorter part of the name.
             </EmptyState>
           ) : (
-            <Table>
+            <Table className="min-w-0 sm:min-w-xl">
               <THead>
                 <tr>
-                  <TH className="w-16" />
+                  <TH className="w-12 sm:w-16" />
                   <TH>Player</TH>
-                  <TH>Best run</TH>
-                  <TH>Total earned</TH>
-                  <TH>Matches</TH>
-                  <TH align="right">Best set</TH>
+                  <TH align="right" className={sort === "best" ? "sm:text-left" : "hidden sm:table-cell sm:text-left"}>
+                    Best run
+                  </TH>
+                  <TH align="right" className={sort === "total" ? "sm:text-left" : "hidden sm:table-cell sm:text-left"}>
+                    Total earned
+                  </TH>
+                  <TH className="hidden sm:table-cell">Matches</TH>
+                  <TH align="right" className="hidden sm:table-cell">
+                    Best set
+                  </TH>
                 </tr>
               </THead>
               <TBody>
@@ -160,10 +167,14 @@ export function MoonsPage() {
                     <TD>
                       <PlayerLink player={l} />
                     </TD>
-                    <TD className={sort === "best" ? "text-primary-300 tabular-nums" : "text-fg tabular-nums"}>{fmtMoney(l.best)}</TD>
-                    <TD className={sort === "total" ? "text-primary-300 tabular-nums" : "text-fg tabular-nums"}>{fmtMoney(l.total)}</TD>
-                    <TD className="text-fg tabular-nums">{l.games}</TD>
-                    <TD align="right" className="text-muted tabular-nums">
+                    <TD align="right" className={cn("tabular-nums sm:text-left", sort === "best" ? "text-primary-300" : "hidden text-fg sm:table-cell")}>
+                      {fmtMoney(l.best)}
+                    </TD>
+                    <TD align="right" className={cn("tabular-nums sm:text-left", sort === "total" ? "text-primary-300" : "hidden text-fg sm:table-cell")}>
+                      {fmtMoney(l.total)}
+                    </TD>
+                    <TD className="hidden text-fg tabular-nums sm:table-cell">{l.games}</TD>
+                    <TD align="right" className="hidden text-muted tabular-nums sm:table-cell">
                       {fmtDate(l.best_at)}
                     </TD>
                   </TR>

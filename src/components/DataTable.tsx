@@ -19,7 +19,7 @@ const cellAlign = cva("", {
 });
 
 export function TH({ className, align, ...props }: ComponentProps<"th"> & VariantProps<typeof cellAlign>) {
-  return <th scope="col" className={cn(cellAlign({ align }), "h-8 px-4 text-label font-medium text-muted uppercase", className)} {...props} />;
+  return <th scope="col" className={cn(cellAlign({ align }), "h-8 px-3 text-label sm:px-4 font-medium text-muted uppercase", className)} {...props} />;
 }
 
 const rowVariants = cva("transition-colors [&>td:first-child]:rounded-l-card [&>td:last-child]:rounded-r-card", {
@@ -39,7 +39,7 @@ export function TR({ className, interactive, inset, ...props }: ComponentProps<"
 }
 
 export function TD({ className, align, ...props }: ComponentProps<"td"> & VariantProps<typeof cellAlign>) {
-  return <td className={cn(cellAlign({ align }), "h-11 px-4 align-middle", className)} {...props} />;
+  return <td className={cn(cellAlign({ align }), "h-11 px-3 align-middle sm:px-4", className)} {...props} />;
 }
 
-export const RankCell = ({ n }: { n: number }) => <TD className="w-16 font-extrabold text-primary-400 tabular-nums">#{n}</TD>;
+export const RankCell = ({ n }: { n: number }) => <TD className="w-12 font-extrabold sm:w-16 text-primary-400 tabular-nums">#{n}</TD>;

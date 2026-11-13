@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dices, Plus, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ErrorState } from "@/components/StateBlock";
+import { ToolIcon } from "@/components/ToolIcon";
 import { Stack } from "@/components/layout/Stack";
 import { Panel, Section } from "@/components/layout/Section";
 import { Caption, Text } from "@/components/typography/Text";
@@ -60,7 +61,7 @@ function Editor({ pw, data }: { pw: string; data: DailyAdminResponse }) {
           </Caption>
         </Stack>
         <Button
-          className="ml-auto"
+          className="w-full sm:ml-auto sm:w-auto"
           variant="secondary"
           disabled={busy}
           onClick={() => window.confirm(`Roll a new random challenge for today? Everyone sees the reveal again.${warn}`) && reroll.mutate()}
@@ -87,7 +88,7 @@ function Editor({ pw, data }: { pw: string; data: DailyAdminResponse }) {
           <Stack key={i} direction="row" align="center" gap={2} wrap>
             <OptionSelect
               label={`Event ${i + 1}`}
-              className="w-56"
+              className="w-full sm:w-56"
               value={e.kind}
               onChange={(v) => setEvent(i, v)}
               options={data.event_kinds.map((k) => ({ value: k, label: eventKindLabel(k) }))}
@@ -95,7 +96,7 @@ function Editor({ pw, data }: { pw: string; data: DailyAdminResponse }) {
             {DETAILS[e.kind] && (
               <OptionSelect
                 label={`Event ${i + 1} detail`}
-                className="w-44"
+                className="min-w-0 flex-1 sm:w-44 sm:flex-none"
                 value={e.detail ?? ""}
                 onChange={(v) => setEvent(i, e.kind, v || null)}
                 options={DETAILS[e.kind].map(([v, l]) => ({ value: v, label: l }))}
@@ -126,18 +127,20 @@ function Editor({ pw, data }: { pw: string; data: DailyAdminResponse }) {
 
       <Stack gap={2}>
         <Caption>Banned tools</Caption>
-        <Stack direction="row" gap={2} wrap>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {draft.banned.map((b, i) => (
-            <OptionSelect
-              key={i}
-              label={`Banned tool ${i + 1}`}
-              className="w-48"
-              value={b}
-              onChange={(v) => setBan(i, v)}
-              options={data.tools.map((t) => ({ value: t, label: toolLabel(t) }))}
-            />
+            <div key={i} className="flex min-w-0 items-center gap-2 rounded-card bg-surface-2 p-2">
+              <ToolIcon tool={b} className="size-9" />
+              <OptionSelect
+                label={`Banned tool ${i + 1}`}
+                className="min-w-0 flex-1"
+                value={b}
+                onChange={(v) => setBan(i, v)}
+                options={data.tools.map((t) => ({ value: t, label: toolLabel(t) }))}
+              />
+            </div>
           ))}
-        </Stack>
+        </div>
       </Stack>
 
       {err && (
@@ -147,7 +150,7 @@ function Editor({ pw, data }: { pw: string; data: DailyAdminResponse }) {
       )}
       <Button
         variant="primary"
-        className="w-fit"
+        className="w-full sm:w-fit"
         disabled={busy}
         onClick={() => window.confirm(`Replace today's challenge with these settings? Everyone sees the reveal again.${warn}`) && save.mutate()}
       >

@@ -85,14 +85,14 @@ export function LeaderboardPage() {
           {query ? "Try a shorter part of the name." : "Players appear here after their first rated match."}
         </EmptyState>
       ) : (
-        <Table>
+        <Table className="min-w-0 sm:min-w-xl">
           <THead>
             <tr>
-              <TH className="w-16" />
+              <TH className="w-12 sm:w-16" />
               <TH>Player</TH>
               <TH>TR</TH>
-              <TH>Peak</TH>
-              <TH>Matches</TH>
+              <TH className="hidden sm:table-cell">Peak</TH>
+              <TH className="hidden sm:table-cell">Matches</TH>
               <TH align="right">Win</TH>
             </tr>
           </THead>
@@ -101,15 +101,17 @@ export function LeaderboardPage() {
               <TR key={e.steam_id} interactive>
                 <RankCell n={e.position} />
                 <TD>
-                  <span className="flex items-center gap-2">
+                  <span className="flex min-w-0 items-center gap-2">
                     <PlayerLink player={e} />
-                    <WornBadges ids={e.worn} />
+                    <span className="hidden sm:contents">
+                      <WornBadges ids={e.worn} />
+                    </span>
                     <RankBadge rank={e.rank} />
                   </span>
                 </TD>
                 <TD className="text-fg tabular-nums">{fmtTr(e.tr)}</TD>
-                <TD className="text-muted tabular-nums">{fmtTr(e.peak_tr)}</TD>
-                <TD className="text-fg tabular-nums">{e.games}</TD>
+                <TD className="hidden text-muted tabular-nums sm:table-cell">{fmtTr(e.peak_tr)}</TD>
+                <TD className="hidden text-fg tabular-nums sm:table-cell">{e.games}</TD>
                 <TD align="right" className="text-primary-300 tabular-nums">
                   {fmtPct(e.wins, e.games)}
                 </TD>

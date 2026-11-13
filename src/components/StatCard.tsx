@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/typography/Text";
 import { cn } from "@/lib/utils";
 
-const statCardVariants = cva("flex min-h-28 flex-col gap-1 rounded-card p-5", {
+const statCardVariants = cva("flex min-h-28 min-w-0 flex-col gap-1 rounded-card p-4 sm:p-5", {
   variants: {
     tone: {
       default: "",
