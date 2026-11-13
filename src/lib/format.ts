@@ -40,12 +40,16 @@ const EVENT_LABELS: Record<string, string> = {
   booombers: "Booombers",
   outside_meta: "Outside is meta",
   no_fire_exit: "You can't go fire",
+  darkness: "Darkness",
+  gold_rush: "Gold rush",
   none: "No event",
 };
 
 const DETAIL_LABELS: Record<string, string> = {
   hoarding_bug: "Hoarding bug",
   nutcracker: "Nutcracker",
+  gold_bar: "Gold bar",
+  cash_register: "Cash register",
 };
 
 export const eventKindLabel = (kind: string) => EVENT_LABELS[kind] ?? kind;

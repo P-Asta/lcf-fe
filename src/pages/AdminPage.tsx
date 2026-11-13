@@ -24,6 +24,7 @@ import { FamilyShare } from "@/pages/admin/FamilyShare";
 import { RankIcons } from "@/pages/admin/RankIcons";
 import { DailyPanel } from "@/pages/admin/DailyPanel";
 import { ServerPanel } from "@/pages/admin/ServerPanel";
+import { StatsPanel } from "@/pages/admin/StatsPanel";
 import { PageTitle } from "@/components/motion/PageTitle";
 
 const KEY = "lcf-admin-pw";
@@ -118,7 +119,7 @@ function Login({ onLogin }: { onLogin: (pw: string) => void }) {
 type Filter = "all" | "online" | "banned" | "ranked";
 
 function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
-  const [tab, setTab] = useState<"players" | "badges" | "ranks" | "daily" | "family" | "server" | "audit">("players");
+  const [tab, setTab] = useState<"players" | "badges" | "ranks" | "daily" | "family" | "server" | "stats" | "audit">("players");
   const players = useQuery({ queryKey: ["admin", "players", pw], queryFn: () => adminApi.players(pw), refetchInterval: 30_000, retry: false });
 
   const authFailed = isAuthError(players.error);
@@ -157,6 +158,7 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
           { value: "daily", label: "Daily" },
           { value: "family", label: "Family share" },
           { value: "server", label: "Server" },
+          { value: "stats", label: "Stats" },
           { value: "audit", label: "Audit log" },
         ]}
       />
@@ -175,6 +177,8 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
         <RankIcons pw={pw} />
       ) : tab === "daily" ? (
         <DailyPanel pw={pw} />
+      ) : tab === "stats" ? (
+        <StatsPanel pw={pw} />
       ) : tab === "server" ? (
         <ServerPanel pw={pw} />
       ) : tab === "family" ? (

@@ -44,6 +44,12 @@ function BoardTable({ rows, live }: { rows: DailyRow[]; live: boolean }) {
         <tr>
           <TH className="w-12 sm:w-16">#</TH>
           <TH>Player</TH>
+          <TH align="right" title="Scrap brought back that was picked up inside the facility">
+            Inside
+          </TH>
+          <TH align="right" title="Scrap brought back that was picked up outside (hives, eggs, ...)">
+            Outside
+          </TH>
           <TH align="right">Ship value</TH>
         </tr>
       </THead>
@@ -53,6 +59,12 @@ function BoardTable({ rows, live }: { rows: DailyRow[]; live: boolean }) {
             <RankCell n={r.place} />
             <TD>
               <PlayerLink player={{ steam_id: r.steam_id, name: r.name, avatar: r.avatar }} />
+            </TD>
+            <TD align="right" className="text-muted tabular-nums">
+              {r.items_inside ?? "-"}
+            </TD>
+            <TD align="right" className="text-muted tabular-nums">
+              {r.items_outside ?? "-"}
             </TD>
             <TD align="right" className="text-primary-300 tabular-nums">
               {fmtMoney(r.score)}
@@ -71,10 +83,10 @@ export function DailyPage() {
   const { data, error, isPending, dataUpdatedAt } = useDaily(day);
   const [board, setBoard] = useState<Board>("first");
   const left = useCountdown(data?.live ? data.ends_in : undefined, dataUpdatedAt);
-
   const days = data?.days ?? [];
   const index = data ? days.findIndex((d) => d.day === data.day) : -1;
-  const go = (d: string | undefined) => {
+
+  const pick = (d: string | undefined) => {
     const next = new URLSearchParams(params);
     if (!d || d === data?.today) next.delete("day");
     else next.set("day", d);
@@ -82,31 +94,39 @@ export function DailyPage() {
   };
 
   if (error) return <ErrorState error={error} />;
-
   const s = data?.settings;
+
   return (
     <Stack gap={8}>
       <Stack direction="row" align="center" justify="between" gap={4} wrap>
         <Stack gap={1}>
           <PageTitle text="Daily race" />
-          <Caption className="text-body">Everyone runs the same moon, seed, events and tool bans, solo. A new race starts every day at 00:00 UTC.</Caption>
+          <Caption className="text-body">
+            Everyone runs the same moon, seed, events and tool bans, solo. A new race starts every day at 00:00 UTC.
+          </Caption>
         </Stack>
         <Stack direction="row" align="center" gap={2} className="w-full sm:w-auto">
-          <Button variant="secondary" size="icon" aria-label="Previous day" disabled={index < 0 || index >= days.length - 1} onClick={() => go(days[index + 1]?.day)}>
+          <Button
+            variant="secondary"
+            size="icon"
+            aria-label="Previous day"
+            disabled={index < 0 || index >= days.length - 1}
+            onClick={() => pick(days[index + 1]?.day)}
+          >
             <ChevronLeft aria-hidden />
           </Button>
           <OptionSelect
             label="Race day"
             className="min-w-0 flex-1 tabular-nums sm:w-64 sm:flex-none"
             value={data?.day ?? ""}
-            onChange={go}
+            onChange={pick}
             disabled={days.length === 0}
             options={days.map((d) => ({
               value: d.day,
               label: `${d.day === data?.today ? `${d.day} (today)` : d.day} · ${d.players} ${d.players === 1 ? "player" : "players"}`,
             }))}
           />
-          <Button variant="secondary" size="icon" aria-label="Next day" disabled={index <= 0} onClick={() => go(days[index - 1]?.day)}>
+          <Button variant="secondary" size="icon" aria-label="Next day" disabled={index <= 0} onClick={() => pick(days[index - 1]?.day)}>
             <ChevronRight aria-hidden />
           </Button>
         </Stack>

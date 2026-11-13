@@ -76,7 +76,16 @@ export type DailySettings = {
   events: GameEvent[];
 };
 
-export type DailyRow = { place: number; steam_id: string; name: string; avatar: string | null; score: number };
+export type DailyRow = {
+  place: number;
+  steam_id: string;
+  name: string;
+  avatar: string | null;
+  score: number;
+  /** Scrap on the ship picked up inside the facility / outside (null: run from an older mod). */
+  items_inside?: number | null;
+  items_outside?: number | null;
+};
 
 export type DailyResponse = {
   day: string;
@@ -287,6 +296,52 @@ async function adminFetch<T>(password: string, path: string, body?: unknown): Pr
   return res.json() as Promise<T>;
 }
 
+export type UsageDay = {
+  /** Local date (the requested tz_offset), YYYY-MM-DD. */
+  day: string;
+  /** Unique players that connected. */
+  players: number;
+  connections: number;
+  new_players: number;
+  avg_session_secs: number | null;
+  peak_online: number;
+  ranked: number;
+  quick: number;
+  /** 1v1 public / private room matches. */
+  duel_rooms: number;
+  custom_public: number;
+  custom_private: number;
+  custom_players: number;
+  daily_runs: number;
+  daily_players: number;
+};
+
+export type UsageHour = { hour: number; connections: number; players: number; games: number };
+
+export type UsageWindow = {
+  players: number;
+  connections: number;
+  new_players: number;
+  peak_online: number;
+  ranked: number;
+  quick: number;
+  duel_rooms: number;
+  custom: number;
+  daily_runs: number;
+  daily_players: number;
+};
+
+export type UsageStatsResponse = {
+  days: UsageDay[];
+  hours: UsageHour[];
+  summary: { today: UsageWindow; week: UsageWindow; month: UsageWindow; range: UsageWindow };
+  tz_offset: number;
+  from: number;
+  to: number;
+  /** First logged connection (unix seconds); connection stats start there. */
+  tracking_since: number | null;
+};
+
 export const adminApi = {
   players: (pw: string) => adminFetch<AdminPlayersResponse>(pw, "/api/admin/players"),
   audit: (pw: string, steamId?: string) =>
@@ -299,6 +354,9 @@ export const adminApi = {
   setDaily: (pw: string, s: DailySettings) => adminFetch<DailyAdminResponse>(pw, "/api/admin/daily", s),
   rerollDaily: (pw: string) => adminFetch<DailyAdminResponse>(pw, "/api/admin/daily/reroll", {}),
   server: (pw: string) => adminFetch<ServerResponse>(pw, "/api/admin/server"),
+  /** Usage statistics for the last `days` days, bucketed in the browser's timezone. */
+  stats: (pw: string, days: number) =>
+    adminFetch<UsageStatsResponse>(pw, `/api/admin/stats?days=${days}&tz_offset=${-new Date().getTimezoneOffset()}`),
   setEvents: (pw: string, c: EventConfig) => adminFetch<ServerResponse>(pw, "/api/admin/events", c),
   /** `minutes` until the shutdown; `cancel` calls a scheduled one off. */
   shutdown: (pw: string, body: { minutes?: number; cancel?: boolean }) => adminFetch<ServerResponse>(pw, "/api/admin/shutdown", body),
