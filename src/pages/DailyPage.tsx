@@ -59,6 +59,9 @@ function BoardTable({ rows, live }: { rows: DailyRow[]; live: boolean }) {
             <RankCell n={r.place} />
             <TD>
               <PlayerLink player={{ steam_id: r.steam_id, name: r.name, avatar: r.avatar }} />
+              <span className="mt-1 block text-xs text-muted" title="Lethal Company version used for this run">
+                {r.game_version != null && r.game_version > 0 ? `v${r.game_version}` : "Version unknown"}
+              </span>
             </TD>
             <TD align="right" className="text-muted tabular-nums">
               {r.items_inside ?? "-"}

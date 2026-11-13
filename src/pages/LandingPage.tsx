@@ -1,4 +1,6 @@
-import { CalendarClock, Eye, Radio, Swords, Users, type LucideIcon } from "lucide-react";
+import { CalendarClock, Download, Eye, Radio, Swords, Users, type LucideIcon } from "lucide-react";
+import { DiscordIcon } from "@/components/DiscordIcon";
+import { DISCORD_URL, THUNDERSTORE_URL } from "@/lib/links";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import BlurText from "@/components/reactbits/BlurText";
@@ -36,6 +38,26 @@ function LiveStat({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
   );
 }
 
+/** Download (Thunderstore) with the Discord invite right next to it. */
+function GetTheMod() {
+  return (
+    <Stack direction="row" gap={2} wrap className="*:flex-1 sm:*:flex-none">
+      <Button asChild variant="primary" className="h-11 px-5">
+        <a href={THUNDERSTORE_URL} target="_blank" rel="noopener noreferrer">
+          <Download aria-hidden />
+          Download on Thunderstore
+        </a>
+      </Button>
+      <Button asChild className="h-11 bg-[#5865f2] px-5 text-white hover:bg-[#4752c4] active:bg-[#3c45a5]">
+        <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
+          <DiscordIcon aria-hidden />
+          Join the Discord
+        </a>
+      </Button>
+    </Stack>
+  );
+}
+
 function Hero() {
   const stats = useLiveStats();
   const visit = useVisit();
@@ -51,8 +73,9 @@ function Hero() {
           </Text>
           <Text tone="muted">Ranked 1v1 on the same seed, a daily race for everyone, custom rooms for up to 28 players and spectating from inside their game.</Text>
         </Stack>
+        <GetTheMod />
         <Stack direction="row" gap={2} wrap className="*:flex-1 sm:*:flex-none">
-          <Button asChild variant="primary">
+          <Button asChild variant="secondary">
             <Link to="/league">
               <Swords aria-hidden />
               View the league
@@ -116,8 +139,11 @@ export function LandingPage() {
         </Section>
         <Section title="Jump in" aside="Ranked, daily race and custom rooms">
           <Panel className="flex flex-col gap-4 p-4 sm:p-6">
-            <Caption className="text-body">Queue up, race the daily seed or open a room with friends. Your rank badge shows up in chat.</Caption>
+            <Caption className="text-body">
+              Install the mod from Thunderstore (BepInEx), then queue up, race the daily seed or open a room with friends. Your rank badge shows up in chat.
+            </Caption>
             <ChatDemo />
+            <GetTheMod />
             <Stack direction="row" gap={2} wrap className="*:flex-1 sm:*:flex-none">
               <Button asChild variant="primary">
                 <Link to="/daily">

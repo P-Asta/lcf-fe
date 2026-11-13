@@ -82,6 +82,8 @@ export type DailyRow = {
   name: string;
   avatar: string | null;
   score: number;
+  /** Played Lethal Company version of this run; historical records can be unknown. */
+  game_version: number | null;
   /** Scrap on the ship picked up inside the facility / outside (null: run from an older mod). */
   items_inside?: number | null;
   items_outside?: number | null;
@@ -253,7 +255,7 @@ export type EventConfig = {
   /** "roll_all" | "roll" | "none" | an event kind. */
   quick_event: string;
   quick_detail: string | null;
-  /** Quick play rules: "default" (ranked rules) | "hunter" | "speedrun". */
+  /** Quick play rules: "default" (ranked rules) | "hunter" | "speedrun" | "augment". */
   quick_preset: string;
   odds: Odds;
 };

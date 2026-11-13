@@ -165,6 +165,7 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
             { value: "default", label: "Default (ranked rules)" },
             { value: "hunter", label: "Monster hunter" },
             { value: "speedrun", label: "Speedrun (20%)" },
+            { value: "augment", label: "Augment" },
           ]}
         />
         <Stack gap={1}>
