@@ -123,6 +123,8 @@ const TOOL_LABELS: Record<string, string> = {
   weedkiller: "Weed killer",
   tzp: "TZP-Inhalant",
   ladder: "Extension ladder",
+  boombox: "Boombox",
+  spray_paint: "Spray paint",
 };
 
 export const toolLabel = (t: string) => TOOL_LABELS[t] ?? t;

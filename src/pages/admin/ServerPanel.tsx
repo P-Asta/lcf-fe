@@ -148,10 +148,39 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
         </div>
 
         <Stack gap={1}>
+          <Text variant="title">Secret Vote</Text>
+          <Caption>During tool bans, show only who is choosing or has locked in. Reveal tool choices once voting ends.</Caption>
+        </Stack>
+        <div className="flex flex-wrap gap-3">
+          <Stack gap={1} className="w-full sm:w-72">
+            <Caption>Ranked</Caption>
+            <OptionSelect
+              label="Ranked Secret Vote"
+              className="w-full"
+              value={(ev.ranked_secret_vote ?? true) ? "on" : "off"}
+              disabled={save.isPending}
+              onChange={(v) => set({ ranked_secret_vote: v === "on" })}
+              options={[{ value: "on", label: "On" }, { value: "off", label: "Off" }]}
+            />
+          </Stack>
+          <Stack gap={1} className="w-full sm:w-72">
+            <Caption>Quick play</Caption>
+            <OptionSelect
+              label="Quick play Secret Vote"
+              className="w-full"
+              value={(ev.quick_secret_vote ?? false) ? "on" : "off"}
+              disabled={save.isPending}
+              onChange={(v) => set({ quick_secret_vote: v === "on" })}
+              options={[{ value: "on", label: "On" }, { value: "off", label: "Off" }]}
+            />
+          </Stack>
+        </div>
+
+        <Stack gap={1}>
           <Text variant="title">Quick play preset</Text>
           <Caption>
-            The rules of every quick play match, the same presets as the custom rooms. Default: the ranked rules. Monster hunter: 10x enemies with no
-            limits and nothing invincible, 20+ inside, 1 life, the most kills wins, no tool bans and no event. Speedrun: the first to bring 20% of the
+            The rules of every quick play match, the same presets as the custom rooms. Default: the ranked rules. Monster hunter: 20x enemies with no
+            limits and nothing invincible, 20+ inside, 1 life, Wipe off, instant takeoff and landing, most kills wins, no tool bans and no event. Speedrun: the first to bring 20% of the
             moon&apos;s scrap back to the ship wins.
           </Caption>
         </Stack>

@@ -9,6 +9,7 @@ const TOOL_IMAGES: Record<string, string | null> = {
   flashlight: "flashlight",
   proflashlight: "proflashlight",
   keys: "key",
+  spray_paint: "sprazypaint",
   key: "key",
   cruiser: null,
 };

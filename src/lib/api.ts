@@ -250,6 +250,8 @@ export type Odds = {
 };
 
 export type EventConfig = {
+  ranked_secret_vote: boolean;
+  quick_secret_vote: boolean;
   /** Never rolled in ranked / random rolls; rooms can still pick them by hand. */
   hidden: string[];
   /** "roll_all" | "roll" | "none" | an event kind. */
