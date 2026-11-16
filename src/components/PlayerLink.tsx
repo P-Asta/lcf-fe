@@ -4,7 +4,7 @@ import { Avatar } from "@/components/Avatar";
 import { RankBadge } from "@/components/RankBadge";
 import { Caption, Label, Text } from "@/components/typography/Text";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { fmtPct, fmtTr } from "@/lib/format";
+import { fmtPct, fmtRating } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export type PlayerSummary = {
@@ -12,6 +12,8 @@ export type PlayerSummary = {
   name: string | null;
   avatar: string | null;
   tr?: number;
+  rd?: number;
+  rating_hidden?: boolean;
   rank?: string;
   games?: number;
   wins?: number;
@@ -47,7 +49,7 @@ export function PlayerLink({ player, className, avatar = true, strong }: PlayerL
               <Text variant="title" className="truncate">
                 {name}
               </Text>
-              <RankBadge rank={player.rank} />
+              <RankBadge rank={player.rank} tr={player.tr} rd={player.rd} rating_hidden={player.rating_hidden} />
             </div>
             <Caption>{player.position ? `#${player.position} on the ladder` : "Unranked"}</Caption>
           </div>
@@ -55,7 +57,7 @@ export function PlayerLink({ player, className, avatar = true, strong }: PlayerL
         <div className="mt-4 grid grid-cols-3 gap-2 rounded-control bg-surface p-3 text-center">
           <div className="flex flex-col">
             <Text variant="title" tone="accent" className="tabular-nums">
-              {fmtTr(player.tr)}
+              {fmtRating(player.tr, player)}
             </Text>
             <Label>TR</Label>
           </div>

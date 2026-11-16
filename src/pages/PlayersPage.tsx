@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Stack } from "@/components/layout/Stack";
 import { BadgeRow } from "@/components/BadgeIcon";
 import { useBadges, usePlayers } from "@/hooks/queries";
-import { fmtPct, fmtTr } from "@/lib/format";
+import { fmtPct, fmtRating } from "@/lib/format";
 import { PageTitle } from "@/components/motion/PageTitle";
 
 const PAGE = 18;
@@ -69,11 +69,11 @@ export function PlayersPage() {
                     <Text variant="title" className="truncate">
                       {e.name}
                     </Text>
-                    <RankBadge rank={e.rank} />
+                    <RankBadge rank={e.rank} tr={e.tr} rd={e.rd} rating_hidden={e.rating_hidden} />
                     <BadgeRow ids={e.badges} defs={badges} max={4} />
                   </span>
                   <Caption>
-                    {e.position != null ? `#${e.position} · ${fmtTr(e.tr)} TR · ${fmtPct(e.wins, e.games)} win rate` : "No ranked games yet"}
+                    {e.position != null ? `#${e.position} · ${fmtRating(e.tr, e)} TR · ${fmtPct(e.wins, e.games)} win rate` : "No ranked games yet"}
                   </Caption>
                 </div>
               </Link>

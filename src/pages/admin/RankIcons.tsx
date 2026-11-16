@@ -9,7 +9,7 @@ import { Caption, Text } from "@/components/typography/Text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { adminApi, api, assetUrl, type BadgeStyle, type RankIcon } from "@/lib/api";
+import { adminApi, api, assetUrl, type BadgeStyle, type RankIcon, type RanksResponse } from "@/lib/api";
 import { RANK_COLORS } from "@/lib/ranks";
 
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -21,7 +21,7 @@ const sameStyle = (a: BadgeStyle, b: BadgeStyle) => cleanPrefix(a.prefix) === cl
 function RankCard({ pw, rank }: { pw: string; rank: RankIcon }) {
   const qc = useQueryClient();
   const ref = useRef<HTMLInputElement>(null);
-  const done = (data: { ranks: RankIcon[] }) => qc.setQueryData(["ranks"], data);
+  const done = (data: RanksResponse) => qc.setQueryData(["ranks"], data);
   const upload = useMutation({ mutationFn: (f: File) => adminApi.uploadRankIcon(pw, rank.id, f), onSuccess: done });
   const reset = useMutation({ mutationFn: () => adminApi.resetRankIcon(pw, rank.id), onSuccess: done });
   const saveStyle = useMutation({ mutationFn: (s: BadgeStyle) => adminApi.setRankStyle(pw, rank.id, s), onSuccess: done });
@@ -44,7 +44,7 @@ function RankCard({ pw, rank }: { pw: string; rank: RankIcon }) {
           <Text variant="title" className="truncate">
             {rank.name}
           </Text>
-          <Caption>Top {rank.top * 100}%</Caption>
+          <Caption>{rank.id === "unknown" ? "Hidden rating emblem" : `Top ${rank.top * 100}%`}</Caption>
         </Stack>
         <Badge tone={rank.custom ? "accent" : "neutral"} className="ml-auto">
           {rank.custom ? "Custom" : "Default"}
@@ -99,6 +99,7 @@ export function RankIcons({ pw }: { pw: string }) {
         {q.data.ranks.map((r) => (
           <RankCard key={r.id} pw={pw} rank={r} />
         ))}
+        {q.data.hidden_rating && <RankCard key={q.data.hidden_rating.id} pw={pw} rank={q.data.hidden_rating} />}
       </div>
     </Stack>
   );

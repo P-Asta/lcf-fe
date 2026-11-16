@@ -9,6 +9,8 @@ export type LeaderboardEntry = {
   peak_tr: number;
   glicko: number;
   rd: number;
+  /** Server decision from effective, unrounded RD; absent on older servers. */
+  rating_hidden?: boolean;
   rank: string;
   games: number;
   wins: number;
@@ -28,6 +30,8 @@ export type Profile = {
   tr: number;
   glicko: number;
   rd: number;
+  /** Server decision from effective, unrounded RD; absent on older servers. */
+  rating_hidden?: boolean;
   rank: string;
   games: number;
   wins: number;
@@ -53,7 +57,7 @@ export type RankIcon = {
   max_tr: number | null;
 };
 
-export type RanksResponse = { ranks: RankIcon[]; ranked_total?: number };
+export type RanksResponse = { ranks: RankIcon[]; hidden_rating?: RankIcon; ranked_total?: number };
 
 export type MatchSide = {
   steam_id: string;
@@ -164,6 +168,9 @@ export type PlayerListEntry = {
   name: string;
   avatar: string | null;
   tr: number;
+  rd?: number;
+  /** Server decision from effective, unrounded RD; absent on older servers. */
+  rating_hidden?: boolean;
   rank: string;
   /** Ladder position, null until the first rated game. */
   position: number | null;
@@ -180,7 +187,9 @@ export type PlayerListResponse = { total: number; ranked_total: number; entries:
 
 export type AdminPlayer = PlayerListEntry & {
   glicko: number;
+  /** Exact effective RD; stored RD excludes inactivity growth. */
   rd: number;
+  stored_rd?: number;
   created: number;
   last_login: number;
   last_played: number;
@@ -249,6 +258,21 @@ export type Odds = {
   infestation: Record<string, number>;
 };
 
+export type RankedEnemyRule = {
+  min_rank: string;
+  max_rank: string;
+  spawn_mult: number;
+  min_inside: number;
+};
+
+export type ToolProtection = {
+  moon_locks: { tool: string; moons: string[] }[];
+  conflicts: { tools: [string, string]; moons: string[] }[];
+};
+
+export type RatingPolicy = { min_rd: number; hidden_rd: number; loss_reduction: number };
+export const DEFAULT_RATING_POLICY: RatingPolicy = { min_rd: 120, hidden_rd: 150, loss_reduction: 0.5 };
+
 export type EventConfig = {
   ranked_secret_vote: boolean;
   quick_secret_vote: boolean;
@@ -259,12 +283,20 @@ export type EventConfig = {
   quick_detail: string | null;
   /** Quick play rules: "default" (ranked rules) | "hunter" | "speedrun" | "augment". */
   quick_preset: string;
+  /** Ordered, inclusive rank ranges; absent on older servers. */
+  ranked_enemy_rules?: RankedEnemyRule[];
+  /** Empty moon lists apply everywhere; absent on older servers. */
+  tool_protection?: ToolProtection;
+  /** Absent on older servers. */
+  rating_policy?: RatingPolicy;
   odds: Odds;
 };
 
 export type ServerResponse = {
   events: EventConfig;
   event_kinds: string[];
+  tools?: string[];
+  moons?: string[];
   /** Seconds until the scheduled shutdown. */
   shutdown_in: number | null;
   stats: { online: number; visits?: number; rooms: number; matches: number; ranked: { searching: number; playing: number }; quick: { searching: number } };
@@ -348,6 +380,7 @@ export type UsageStatsResponse = {
 
 export const adminApi = {
   players: (pw: string) => adminFetch<AdminPlayersResponse>(pw, "/api/admin/players"),
+  setPlayerRd: (pw: string, steamId: string, rd: number) => adminFetch<{ ok: true }>(pw, "/api/admin/player/rd", { steam_id: steamId, rd }),
   audit: (pw: string, steamId?: string) =>
     adminFetch<{ entries: AuditEntry[] }>(pw, `/api/admin/audit?limit=200${steamId ? `&steam_id=${encodeURIComponent(steamId)}` : ""}`),
   /** `days` 0 = permanent. */
@@ -390,10 +423,10 @@ export const adminApi = {
       body: file,
     });
     if (!res.ok) throw new ApiError(res.status, (await res.text()) || res.statusText);
-    return res.json() as Promise<{ ranks: RankIcon[] }>;
+    return res.json() as Promise<RanksResponse>;
   },
-  resetRankIcon: (pw: string, id: string) => adminFetch<{ ranks: RankIcon[] }>(pw, `/api/admin/ranks/${id}/reset`, {}),
-  setRankStyle: (pw: string, id: string, style: BadgeStyle) => adminFetch<{ ranks: RankIcon[] }>(pw, `/api/admin/ranks/${id}/style`, style),
+  resetRankIcon: (pw: string, id: string) => adminFetch<RanksResponse>(pw, `/api/admin/ranks/${id}/reset`, {}),
+  setRankStyle: (pw: string, id: string, style: BadgeStyle) => adminFetch<RanksResponse>(pw, `/api/admin/ranks/${id}/style`, style),
   deleteBadge: (pw: string, id: number) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/delete`, {}),
   grantBadge: (pw: string, id: number, steamId: string) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/grant`, { steam_id: steamId }),
   revokeBadge: (pw: string, id: number, steamId: string) => adminFetch<{ ok: true }>(pw, `/api/admin/badges/${id}/revoke`, { steam_id: steamId }),

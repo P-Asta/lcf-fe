@@ -22,6 +22,7 @@ import { fmtDate, fmtTime, fmtTr } from "@/lib/format";
 import { BadgeManager, PlayerBadgeEditor } from "@/pages/admin/BadgeManager";
 import { FamilyShare } from "@/pages/admin/FamilyShare";
 import { RankIcons } from "@/pages/admin/RankIcons";
+import { PlayerRdEditor } from "@/pages/admin/PlayerRdEditor";
 import { DailyPanel } from "@/pages/admin/DailyPanel";
 import { ServerPanel } from "@/pages/admin/ServerPanel";
 import { StatsPanel } from "@/pages/admin/StatsPanel";
@@ -275,7 +276,7 @@ function PlayerTable({ pw, players }: { pw: string; players: AdminPlayer[] }) {
                       </span>
                     </TD>
                     <TD className="hidden sm:table-cell">
-                      <RankBadge rank={p.rank} />
+                      <RankBadge rank={p.rank} tr={p.tr} rd={p.rd} rating_hidden={p.rating_hidden} />
                     </TD>
                     <TD align="right" className="tabular-nums">
                       {fmtTr(p.tr)}
@@ -357,6 +358,8 @@ function PlayerDetail({ pw, p }: { pw: string; p: AdminPlayer }) {
             </>
           )}
         </dl>
+
+        <PlayerRdEditor pw={pw} player={p} />
 
         {p.banned ? (
           <Button variant="secondary" className="w-fit" disabled={unban.isPending} onClick={() => unban.mutate()}>

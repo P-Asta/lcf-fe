@@ -107,7 +107,10 @@ export function OddsEditor({ pw, data }: { pw: string; data: ServerResponse }) {
   useEffect(() => setOdds(data.events.odds), [data.events.odds]);
   const dirty = useMemo(() => JSON.stringify(odds) !== JSON.stringify(data.events.odds), [odds, data.events.odds]);
   const save = useMutation({
-    mutationFn: () => adminApi.setEvents(pw, { ...data.events, odds }),
+    scope: { id: `admin-events-${pw}` },
+    mutationFn: (odds: Odds) => adminApi.setEvents(pw, {
+      ...(qc.getQueryData<ServerResponse>(["admin", "server", pw])?.events ?? data.events), odds,
+    }),
     onSuccess: (d) => qc.setQueryData(["admin", "server", pw], d),
   });
 
@@ -181,7 +184,7 @@ export function OddsEditor({ pw, data }: { pw: string; data: ServerResponse }) {
           </Text>
         )}
         <Stack direction="row" align="center" gap={2}>
-          <Button variant="primary" disabled={!dirty || save.isPending} onClick={() => save.mutate()}>
+          <Button variant="primary" disabled={!dirty || save.isPending} onClick={() => save.mutate(odds)}>
             <Save aria-hidden />
             {save.isPending ? "Saving…" : "Save odds"}
           </Button>

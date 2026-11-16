@@ -18,13 +18,13 @@ export const useDaily = (day?: string) =>
   });
 
 export const useRanks = () =>
-  useQuery({ queryKey: ["ranks"], queryFn: api.ranks, staleTime: 300_000, refetchInterval: (q) => errorRetry(q) || 600_000 });
+  useQuery({ queryKey: ["ranks"], queryFn: api.ranks, staleTime: 30_000, refetchInterval: (q) => errorRetry(q) || 30_000 });
 
 export const useBadges = () =>
   useQuery({ queryKey: ["badges"], queryFn: api.badges, refetchInterval: (q) => errorRetry(q) || 300_000 });
 
 export const usePlayer = (steamId: string) =>
-  useQuery({ queryKey: ["player", steamId], queryFn: () => api.player(steamId), refetchInterval: errorRetry, enabled: !!steamId });
+  useQuery({ queryKey: ["player", steamId], queryFn: () => api.player(steamId), refetchInterval: (q) => errorRetry(q) || 30_000, enabled: !!steamId });
 
 export const useMoons = () =>
   useQuery({ queryKey: ["moons"], queryFn: api.moons, refetchInterval: (q) => errorRetry(q) || 60_000 });

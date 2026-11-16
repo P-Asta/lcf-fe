@@ -23,7 +23,7 @@ import { Stack } from "@/components/layout/Stack";
 import { usePlayer } from "@/hooks/queries";
 import { achievements } from "@/lib/achievements";
 import { ApiError, type PlayerResponse } from "@/lib/api";
-import { deathLabel, eventKindLabel, fmtDate, fmtMoney, fmtPct, fmtSigned, fmtTr, kindLabel } from "@/lib/format";
+import { deathLabel, eventKindLabel, fmtDate, fmtMoney, fmtPct, fmtRating, fmtSigned, fmtTr, isRatingHidden, kindLabel } from "@/lib/format";
 import { playerStats, type Outcome, type PlayerStats } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +51,7 @@ export function PlayerPage() {
       <EventStats stats={stats} />
       <DeathCauses data={data} />
       <Achievements data={data} stats={stats} />
-      <RecentMatches stats={stats} />
+      <RecentMatches stats={stats} ratingHidden={isRatingHidden(data.profile)} />
     </Stack>
   );
 }
@@ -83,8 +83,8 @@ function PlayerHeader({ data }: { data: PlayerResponse }) {
           <div className="flex flex-wrap items-center gap-2">
             <PageTitle text={p.name} className="max-w-full truncate" />
             <WornBadges ids={p.worn} size="md" />
-            <RankBadge rank={p.rank} size="md" />
-            <Badge>{fmtTr(p.tr)} TR</Badge>
+            <RankBadge rank={p.rank} tr={p.tr} rd={p.rd} rating_hidden={p.rating_hidden} size="md" />
+            <Badge>{fmtRating(p.tr, p)} TR</Badge>
           </div>
           {data.badges.length > 0 && (
             <ul aria-label="Badges" className="flex flex-wrap items-center gap-2">
@@ -126,6 +126,7 @@ function PlayerHeader({ data }: { data: PlayerResponse }) {
 function RatingCards({ data, stats }: { data: PlayerResponse; stats: PlayerStats }) {
   const p = data.profile;
   const peak = Math.max(data.peak_tr ?? 0, p.tr);
+  const hidden = isRatingHidden(p);
   return (
     <Section title="Rating">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
@@ -134,10 +135,10 @@ function RatingCards({ data, stats }: { data: PlayerResponse; stats: PlayerStats
           big
           className="col-span-2"
           label="Current TR"
-          value={fmtTr(p.tr)}
-          sub={`Glicko ${fmtTr(p.glicko)} ±${fmtTr(p.rd)}`}
+          value={fmtRating(p.tr, p)}
+          sub={hidden ? "Glicko ? ±?" : `Glicko ${fmtTr(p.glicko)} ±${fmtTr(p.rd)}`}
         />
-        <StatCard label="Peak TR" value={peak > 0 ? fmtTr(peak) : "-"} sub={p.games > 0 ? `${fmtTr(Math.max(0, peak - p.tr))} below peak` : "No rated games"} />
+        <StatCard label="Peak TR" value={hidden ? "?" : peak > 0 ? fmtTr(peak) : "-"} sub={hidden ? undefined : p.games > 0 ? `${fmtTr(Math.max(0, peak - p.tr))} below peak` : "No rated games"} />
         <StatCard label="Matches" value={stats.games} sub={`${stats.wins} wins`} />
         <StatCard label="Win rate" value={fmtPct(stats.wins, stats.games)} sub={`${stats.losses} losses`} />
         <StatCard label="Ladder rank" value={p.position != null ? `#${p.position}` : "-"} sub={p.position != null ? `of ${data.ranked_total} players` : "No rated games"} />
@@ -306,7 +307,7 @@ const OUTCOME: Record<Outcome, { label: string; className: string }> = {
 
 const PAGE = 10;
 
-function RecentMatches({ stats }: { stats: PlayerStats }) {
+function RecentMatches({ stats, ratingHidden }: { stats: PlayerStats; ratingHidden: boolean }) {
   const [shown, setShown] = useState(PAGE);
   if (stats.history.length === 0) {
     return (
@@ -350,8 +351,8 @@ function RecentMatches({ stats }: { stats: PlayerStats }) {
               <TD align="right" className="whitespace-nowrap tabular-nums">
                 {fmtMoney(pm.me.score)} <span className="hidden text-muted min-[480px]:inline">/ {fmtMoney(pm.opp.score)}</span>
               </TD>
-              <TD align="right" className={cn("tabular-nums", pm.trDelta == null ? "text-muted" : pm.trDelta >= 0 ? "text-primary-300" : "text-danger")}>
-                {pm.trDelta == null ? "-" : fmtSigned(pm.trDelta)}
+              <TD align="right" className={cn("tabular-nums", ratingHidden || pm.trDelta == null ? "text-muted" : pm.trDelta >= 0 ? "text-primary-300" : "text-danger")}>
+                {pm.trDelta == null ? "-" : ratingHidden ? "?" : fmtSigned(pm.trDelta)}
               </TD>
               <TD align="right" className="hidden text-muted tabular-nums md:table-cell">
                 {fmtDate(pm.match.created)}

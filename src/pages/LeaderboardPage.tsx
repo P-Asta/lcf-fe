@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Stack } from "@/components/layout/Stack";
 import { useLeaderboard } from "@/hooks/queries";
 import type { LeaderboardEntry } from "@/lib/api";
-import { fmtPct, fmtTr } from "@/lib/format";
+import { fmtPct, fmtRating } from "@/lib/format";
 import { PageTitle } from "@/components/motion/PageTitle";
 
 type SortKey = "tr" | "wins" | "winrate" | "games";
@@ -106,11 +106,11 @@ export function LeaderboardPage() {
                     <span className="hidden sm:contents">
                       <WornBadges ids={e.worn} />
                     </span>
-                    <RankBadge rank={e.rank} />
+                    <RankBadge rank={e.rank} tr={e.tr} rd={e.rd} rating_hidden={e.rating_hidden} />
                   </span>
                 </TD>
-                <TD className="text-fg tabular-nums">{fmtTr(e.tr)}</TD>
-                <TD className="hidden text-muted tabular-nums sm:table-cell">{fmtTr(e.peak_tr)}</TD>
+                <TD className="text-fg tabular-nums">{fmtRating(e.tr, e)}</TD>
+                <TD className="hidden text-muted tabular-nums sm:table-cell">{fmtRating(e.peak_tr, e)}</TD>
                 <TD className="hidden text-fg tabular-nums sm:table-cell">{e.games}</TD>
                 <TD align="right" className="text-primary-300 tabular-nums">
                   {fmtPct(e.wins, e.games)}

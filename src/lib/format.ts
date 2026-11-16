@@ -5,6 +5,11 @@ const decimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 export const fmtInt = (n: number) => number.format(Math.round(n));
 export const fmtTr = (n: number) => decimal.format(n);
+type RatingVisibility = { tr?: number; rd?: number; rating_hidden?: boolean };
+/** Keep partial summaries unchanged unless the server or known RD says to hide. */
+export const isRatingHidden = (player: RatingVisibility) =>
+  player.tr != null && player.tr >= 0 && (player.rating_hidden ?? (player.rd != null && player.rd >= 150));
+export const fmtRating = (n: number, player: RatingVisibility) => (isRatingHidden(player) ? "?" : fmtTr(n));
 export const fmtMoney = (n: number) => `$${number.format(Math.round(n))}`;
 export const fmtPct = (part: number, whole: number) => (whole <= 0 ? "-" : `${Math.round((part / whole) * 100)}%`);
 export const fmtSigned = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : "±"}${decimal.format(Math.abs(n))}`;
