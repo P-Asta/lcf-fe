@@ -33,6 +33,14 @@ const DETAILS: Record<string, [string, string][]> = {
   ],
 };
 
+const PRESET_OPTIONS = [
+  { value: "default", label: "Default (ranked rules)" },
+  { value: "hunter", label: "Monster hunter" },
+  { value: "speedrun", label: "Speedrun (20%)" },
+  { value: "augment", label: "Augment" },
+  { value: "last_survivor", label: "Death Swap" },
+];
+
 /** Counts down locally between the 5 s refreshes. */
 function useCountdown(seconds: number | null | undefined) {
   const [left, setLeft] = useState(seconds ?? null);
@@ -156,6 +164,24 @@ const DEFAULT_TOOL_PROTECTION: ToolProtection = {
   ],
 };
 
+// One shared rule per unordered pair; an empty scope applies on every moon.
+function normalizeToolProtection(policy: ToolProtection): ToolProtection {
+  const mergeMoons = (a: string[], b: string[]) => a.length === 0 || b.length === 0 ? [] : [...new Set([...a, ...b])];
+  const locks = new Map<string, ToolProtection["moon_locks"][number]>();
+  for (const rule of policy.moon_locks) {
+    const previous = locks.get(rule.tool);
+    locks.set(rule.tool, { tool: rule.tool, moons: previous ? mergeMoons(previous.moons, rule.moons) : [...rule.moons] });
+  }
+  const conflicts = new Map<string, ToolProtection["conflicts"][number]>();
+  for (const rule of policy.conflicts) {
+    const tools = [...rule.tools].sort() as [string, string];
+    const key = JSON.stringify(tools);
+    const previous = conflicts.get(key);
+    conflicts.set(key, { tools, moons: previous ? mergeMoons(previous.moons, rule.moons) : [...rule.moons] });
+  }
+  return { moon_locks: [...locks.values()], conflicts: [...conflicts.values()] };
+}
+
 function MoonScope({ label, value, moons, disabled, onChange }: { label: string; value: string[]; moons: string[]; disabled: boolean; onChange: (v: string[]) => void }) {
   return (
     <Stack gap={2}>
@@ -191,9 +217,12 @@ function MoonScope({ label, value, moons, disabled, onChange }: { label: string;
 function ToolProtectionEditor({ pw, data }: { pw: string; data: ServerResponse }) {
   const qc = useQueryClient();
   const [draft, setDraft] = useState<ToolProtection | null>(null);
-  const saved = data.events.tool_protection ?? DEFAULT_TOOL_PROTECTION;
+  const [selection, setSelection] = useState("");
+  const saved = normalizeToolProtection(data.events.tool_protection ?? DEFAULT_TOOL_PROTECTION);
   const policy = draft ?? saved;
-  const tools = data.tools ?? DEFAULT_TOOLS;
+  const tools = [...new Set([...(data.tools ?? DEFAULT_TOOLS), ...policy.moon_locks.map((rule) => rule.tool), ...policy.conflicts.flatMap((rule) => rule.tools)])];
+  const selected = tools.includes(selection) ? selection : (tools[0] ?? "");
+  const lock = policy.moon_locks.find((rule) => rule.tool === selected);
   const moons = data.moons ?? DEFAULT_MOONS;
   const options = tools.map((tool) => ({ value: tool, label: toolLabel(tool) }));
   const dirty = JSON.stringify(policy) !== JSON.stringify(saved);
@@ -208,54 +237,58 @@ function ToolProtectionEditor({ pw, data }: { pw: string; data: ServerResponse }
       setDraft(null);
     },
   });
-  const edit = (next: ToolProtection) => { save.reset(); setDraft(next); };
-  const setLock = (index: number, patch: Partial<ToolProtection["moon_locks"][number]>) =>
-    edit({ ...policy, moon_locks: policy.moon_locks.map((rule, i) => i === index ? { ...rule, ...patch } : rule) });
-  const setConflict = (index: number, patch: Partial<ToolProtection["conflicts"][number]>) =>
-    edit({ ...policy, conflicts: policy.conflicts.map((rule, i) => i === index ? { ...rule, ...patch } : rule) });
+  const edit = (next: ToolProtection) => { save.reset(); setDraft(normalizeToolProtection(next)); };
+  const setLock = (scope: string[] | null) => edit({
+    ...policy,
+    moon_locks: [...policy.moon_locks.filter((rule) => rule.tool !== selected), ...(scope === null ? [] : [{ tool: selected, moons: scope }])],
+  });
+  const setConflict = (partner: string, scope: string[] | null) => edit({
+    ...policy,
+    conflicts: [
+      ...policy.conflicts.filter((rule) => !(rule.tools.includes(selected) && rule.tools.includes(partner))),
+      ...(scope === null ? [] : [{ tools: [selected, partner] as [string, string], moons: scope }]),
+    ],
+  });
 
   return (
     <Stack gap={4}>
       <Stack gap={1}>
         <Text variant="title">Essential Tool Protection</Text>
         <Caption>
-          Locked tools cannot be banned on their selected moons. For each conflicting pair, banning either tool protects the other.
-          Choose all moons or specific moons for each rule. Save to apply to new matches; running matches keep their rules.
+          Choose a tool to edit its protected moons and the tools that cannot be banned together with it.
+          Changes to a pair appear for both tools. Save to apply to new matches; running matches keep their rules.
         </Caption>
       </Stack>
-      {policy.moon_locks.map((rule, index) => (
-        <fieldset key={index} className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-          <legend className="mb-2 text-caption text-muted">Locked tool {index + 1}</legend>
-          <Stack gap={1}>
-            <Caption>Tool</Caption>
-            <OptionSelect label={`Lock ${index + 1} tool`} value={rule.tool} options={options} disabled={save.isPending} onChange={(tool) => setLock(index, { tool })} />
-          </Stack>
-          <MoonScope label={`Lock ${index + 1}`} value={rule.moons} moons={moons} disabled={save.isPending} onChange={(next) => setLock(index, { moons: next })} />
-          <Button variant="ghost" className="w-fit" aria-label={`Remove lock ${index + 1}`} disabled={save.isPending} onClick={() => edit({ ...policy, moon_locks: policy.moon_locks.filter((_, i) => i !== index) })}>Remove</Button>
+      <Stack gap={1} className="w-full sm:w-72">
+        <Caption>Tool</Caption>
+        <OptionSelect label="Protected tool" value={selected} options={options} disabled={save.isPending || tools.length === 0} onChange={setSelection} />
+      </Stack>
+      {selected && <>
+        <Stack gap={2}>
+          <label className="flex items-center gap-2 text-body">
+            <input type="checkbox" aria-label="Protect selected tool" className="size-4 accent-primary-500" checked={!!lock} disabled={save.isPending} onChange={(e) => setLock(e.target.checked ? [] : null)} />
+            Prevent banning {toolLabel(selected)}
+          </label>
+          {lock && <MoonScope label="Protected tool" value={lock.moons} moons={moons} disabled={save.isPending} onChange={setLock} />}
+        </Stack>
+        <fieldset className="min-w-0">
+          <legend className="mb-2 text-body">Cannot be banned together with</legend>
+          <Caption>Banning either tool protects the other on the selected moons.</Caption>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            {tools.filter((tool) => tool !== selected).map((partner) => {
+              const rule = policy.conflicts.find((rule) => rule.tools.includes(selected) && rule.tools.includes(partner));
+              return <Stack key={partner} gap={2}>
+                <label className="flex items-center gap-2 text-body">
+                  <input type="checkbox" aria-label={`Cannot ban together with ${toolLabel(partner)}`} className="size-4 accent-primary-500" checked={!!rule} disabled={save.isPending} onChange={(e) => setConflict(partner, e.target.checked ? [] : null)} />
+                  {toolLabel(partner)}
+                </label>
+                {rule && <MoonScope label={`${toolLabel(selected)} / ${toolLabel(partner)}`} value={rule.moons} moons={moons} disabled={save.isPending} onChange={(scope) => setConflict(partner, scope)} />}
+              </Stack>;
+            })}
+          </div>
         </fieldset>
-      ))}
-      <Button variant="secondary" className="w-fit" disabled={save.isPending || tools.length === 0} onClick={() => edit({ ...policy, moon_locks: [...policy.moon_locks, { tool: tools[0], moons: [] }] })}>
-        <Plus aria-hidden /> Add locked tool
-      </Button>
-      {policy.conflicts.map((rule, index) => (
-        <fieldset key={index} className="grid min-w-0 gap-3 sm:grid-cols-2">
-          <legend className="mb-2 text-caption text-muted">Conflicting pair {index + 1}</legend>
-          <Stack gap={1}>
-            <Caption>First tool</Caption>
-            <OptionSelect label={`Conflict ${index + 1} first tool`} value={rule.tools[0]} options={options} disabled={save.isPending} onChange={(tool) => setConflict(index, { tools: [tool, rule.tools[1]] })} />
-          </Stack>
-          <Stack gap={1}>
-            <Caption>Second tool</Caption>
-            <OptionSelect label={`Conflict ${index + 1} second tool`} value={rule.tools[1]} options={options} disabled={save.isPending} onChange={(tool) => setConflict(index, { tools: [rule.tools[0], tool] })} />
-          </Stack>
-          <div className="sm:col-span-2"><MoonScope label={`Conflict ${index + 1}`} value={rule.moons} moons={moons} disabled={save.isPending} onChange={(next) => setConflict(index, { moons: next })} /></div>
-          <Button variant="ghost" className="w-fit" aria-label={`Remove conflict ${index + 1}`} disabled={save.isPending} onClick={() => edit({ ...policy, conflicts: policy.conflicts.filter((_, i) => i !== index) })}>Remove</Button>
-        </fieldset>
-      ))}
+      </>}
       <Stack direction="row" align="center" gap={2} wrap>
-        <Button variant="secondary" disabled={save.isPending || tools.length < 2} onClick={() => edit({ ...policy, conflicts: [...policy.conflicts, { tools: [tools[0], tools[1]], moons: [] }] })}>
-          <Plus aria-hidden /> Add conflicting pair
-        </Button>
         <Button variant="primary" disabled={!dirty || invalid || save.isPending} onClick={() => save.mutate(policy)}>
           <Save aria-hidden /> {save.isPending ? "Saving…" : "Save tool protection"}
         </Button>
@@ -336,14 +369,24 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
   const ev = data.events;
   const set = (patch: Partial<EventConfig>) => save.mutate(patch);
   const toggle = (k: string) => set({ hidden: ev.hidden.includes(k) ? ev.hidden.filter((h) => h !== k) : [...ev.hidden, k] });
+  const restrictedEvents = ev.restricted_events ?? ["world_relay"];
+  const restrictedPresets = ev.restricted_presets ?? ["last_survivor"];
+  const toggleVisibility = (key: "restricted_events" | "restricted_presets", current: string[], option: string) => {
+    const makingPublic = current.includes(option);
+    set({
+      [key]: makingPublic ? current.filter((value) => value !== option) : [...current, option],
+      ...(key === "restricted_presets" && option === "last_survivor" && makingPublic
+        ? { restricted_events: restrictedEvents.filter((event) => event !== "world_relay") } : {}),
+    });
+  };
   const details = DETAILS[ev.quick_event];
 
   return (
     <Section title="Events">
       <Panel className="flex flex-col gap-4 p-4">
         <Stack gap={1}>
-          <Text variant="title">Hidden events</Text>
-          <Caption>Hidden events never come up in ranked, in random rolls, or as seed bonus events, and the event slot machine does not show them. Rooms can still pick them by hand (shown dimmed in the game).</Caption>
+          <Text variant="title">Random event pool</Text>
+          <Caption>Excluded events never come up in ranked, in random rolls, or as seed bonus events, and the event slot machine does not show them. Rooms can still pick them by hand when available to the host.</Caption>
         </Stack>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {data.event_kinds.map((k) => {
@@ -361,7 +404,7 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
                 {hidden ? (
                   <Badge tone="danger">
                     <EyeOff aria-hidden className="size-3.5" />
-                    Hidden
+                    Excluded
                   </Badge>
                 ) : (
                   <Badge>In random</Badge>
@@ -370,6 +413,32 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
             );
           })}
         </div>
+
+        <Stack gap={3}>
+          <Stack gap={1}>
+            <Text variant="title">Room option visibility</Text>
+            <Caption>Choose which events and presets everyone can select in custom rooms. Turn off to limit an option to players with an administrator-assigned Admin, Developer, or Youtuber badge. Random event exclusions are managed separately above.</Caption>
+            <Caption>Making Death Swap public also makes World Relay public. Hiding the preset keeps the event&apos;s visibility unchanged.</Caption>
+          </Stack>
+          <fieldset className="min-w-0">
+            <legend className="mb-2 text-caption text-muted">Events · show to everyone</legend>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {data.event_kinds.map((event) => <label key={event} className="flex items-center gap-2 text-body">
+                <input type="checkbox" aria-label={`Show event ${event} to everyone`} className="size-4 accent-primary-500" checked={!restrictedEvents.includes(event)} disabled={save.isPending} onChange={() => toggleVisibility("restricted_events", restrictedEvents, event)} />
+                {eventKindLabel(event)}
+              </label>)}
+            </div>
+          </fieldset>
+          <fieldset className="min-w-0">
+            <legend className="mb-2 text-caption text-muted">Presets · show to everyone</legend>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {PRESET_OPTIONS.map(({ value, label }) => <label key={value} className="flex items-center gap-2 text-body">
+                <input type="checkbox" aria-label={`Show preset ${value} to everyone`} className="size-4 accent-primary-500" checked={!restrictedPresets.includes(value)} disabled={save.isPending} onChange={() => toggleVisibility("restricted_presets", restrictedPresets, value)} />
+                {label}
+              </label>)}
+            </div>
+          </fieldset>
+        </Stack>
 
         <Stack gap={1}>
           <Text variant="title">Secret Vote</Text>
@@ -418,12 +487,7 @@ function Events({ pw, data }: { pw: string; data: ServerResponse }) {
           value={ev.quick_preset ?? "default"}
           disabled={save.isPending}
           onChange={(v) => set({ quick_preset: v })}
-          options={[
-            { value: "default", label: "Default (ranked rules)" },
-            { value: "hunter", label: "Monster hunter" },
-            { value: "speedrun", label: "Speedrun (20%)" },
-            { value: "augment", label: "Augment" },
-          ]}
+          options={PRESET_OPTIONS}
         />
         <Stack gap={1}>
           <Text variant="title">Quick play event</Text>

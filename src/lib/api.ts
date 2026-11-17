@@ -278,10 +278,13 @@ export type EventConfig = {
   quick_secret_vote: boolean;
   /** Never rolled in ranked / random rolls; rooms can still pick them by hand. */
   hidden: string[];
+  /** Room options limited to holders of an administrator-assigned Admin, Developer, or Youtuber badge; absent on older servers. */
+  restricted_events?: string[];
+  restricted_presets?: string[];
   /** "roll_all" | "roll" | "none" | an event kind. */
   quick_event: string;
   quick_detail: string | null;
-  /** Quick play rules: "default" (ranked rules) | "hunter" | "speedrun" | "augment". */
+  /** Quick play rules: "default" (ranked rules) | "hunter" | "speedrun" | "augment" | "last_survivor". */
   quick_preset: string;
   /** Ordered, inclusive rank ranges; absent on older servers. */
   ranked_enemy_rules?: RankedEnemyRule[];

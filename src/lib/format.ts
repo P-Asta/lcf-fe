@@ -47,6 +47,7 @@ const EVENT_LABELS: Record<string, string> = {
   no_fire_exit: "You can't go fire",
   darkness: "Darkness",
   gold_rush: "Gold rush",
+  world_relay: "World Relay",
   none: "No event",
 };
 
